@@ -5,13 +5,13 @@
  * - 保存済みデータの形が壊れていても、可能な範囲で復元し、不正な要素は破棄する。
  */
 
-import type { AppData, NursingNote, Patient, VitalSign } from '../types';
+import type { AppData, Medication, NursingNote, Patient, VitalSign } from '../types';
 import { isBloodType, isGender, isRecordType } from '../data/options';
 import { generateId } from './id';
 
 export const STORAGE_KEY = 'medichart-lite:app-data:v1';
 
-const DATA_VERSION = 1;
+const DATA_VERSION = 2;
 
 /** 空のデータセット */
 export function createEmptyAppData(): AppData {
@@ -20,6 +20,7 @@ export function createEmptyAppData(): AppData {
     patients: [],
     vitalSigns: [],
     nursingNotes: [],
+    medications: [],
     sampleDataLoaded: false,
   };
 }
@@ -120,6 +121,31 @@ function sanitizeNursingNote(raw: unknown): NursingNote | null {
   };
 }
 
+function sanitizeMedication(raw: unknown): Medication | null {
+  if (!isRecord(raw)) return null;
+
+  const patientId = readString(raw, 'patientId');
+  const name = readString(raw, 'name').trim();
+  const dose = readString(raw, 'dose').trim();
+  if (patientId === '' || name === '' || dose === '') return null;
+
+  const now = new Date().toISOString();
+  return {
+    id: readString(raw, 'id') || generateId(),
+    patientId,
+    category: raw.category === 'prn' ? 'prn' : 'regular',
+    name,
+    dose,
+    unit: readString(raw, 'unit').trim(),
+    timing: readString(raw, 'timing').trim(),
+    indication: readString(raw, 'indication').trim(),
+    lastAdministeredAt: readString(raw, 'lastAdministeredAt'),
+    memo: readString(raw, 'memo').trim(),
+    createdAt: readString(raw, 'createdAt', now),
+    updatedAt: readString(raw, 'updatedAt', now),
+  };
+}
+
 function sanitizeAppData(raw: unknown): AppData | null {
   if (!isRecord(raw)) return null;
 
@@ -144,11 +170,22 @@ function sanitizeAppData(raw: unknown): AppData | null {
         .filter((note): note is NursingNote => note !== null && patientIds.has(note.patientId))
     : [];
 
+  // v1 データには medications が存在しないため、空配列として安全に補完する
+  const medications = Array.isArray(raw.medications)
+    ? raw.medications
+        .map(sanitizeMedication)
+        .filter(
+          (medication): medication is Medication =>
+            medication !== null && patientIds.has(medication.patientId),
+        )
+    : [];
+
   return {
-    version: typeof raw.version === 'number' ? raw.version : DATA_VERSION,
+    version: DATA_VERSION,
     patients,
     vitalSigns,
     nursingNotes,
+    medications,
     sampleDataLoaded: raw.sampleDataLoaded === true,
   };
 }

@@ -5,6 +5,7 @@ import { CONSCIOUSNESS_OPTIONS } from '../data/options';
 import { VITAL_RANGES, parseNumericField } from '../utils/validation';
 import type { VitalFieldKey } from '../utils/validation';
 import { dateTimeLocalToISO, toDateTimeLocalValue } from '../utils/date';
+import { BilingualText } from './BilingualText';
 
 interface VitalSignFormProps {
   onSubmit: (input: VitalSignInput) => void;
@@ -15,14 +16,14 @@ type NumericFormState = Record<VitalFieldKey, string>;
 type VitalErrors = Partial<Record<VitalFieldKey | 'measuredAt', string>>;
 
 /** 数値入力欄の表示順と設定 */
-const NUMERIC_FIELDS: { key: VitalFieldKey; english: string }[] = [
-  { key: 'temperature', english: 'Temperature' },
-  { key: 'systolic', english: 'Systolic BP' },
-  { key: 'diastolic', english: 'Diastolic BP' },
-  { key: 'pulse', english: 'Pulse' },
-  { key: 'respiration', english: 'Respiration' },
-  { key: 'spo2', english: 'SpO₂' },
-  { key: 'painScale', english: 'Pain Scale' },
+const NUMERIC_FIELDS: { key: VitalFieldKey; english: string; japanese: string }[] = [
+  { key: 'temperature', english: 'Temperature', japanese: '体温' },
+  { key: 'systolic', english: 'Systolic BP', japanese: '収縮期血圧' },
+  { key: 'diastolic', english: 'Diastolic BP', japanese: '拡張期血圧' },
+  { key: 'pulse', english: 'Pulse', japanese: '脈拍' },
+  { key: 'respiration', english: 'Respiration', japanese: '呼吸数' },
+  { key: 'spo2', english: 'SpO₂', japanese: '酸素飽和度' },
+  { key: 'painScale', english: 'Pain Scale', japanese: '疼痛スケール' },
 ];
 
 function createEmptyNumericState(): NumericFormState {
@@ -121,7 +122,7 @@ export function VitalSignForm({ onSubmit }: VitalSignFormProps) {
       <div className="form-grid form-grid--compact">
         <div className="field">
           <label className="field__label" htmlFor={fieldId('measuredAt')}>
-            測定日時
+            <BilingualText english="Measured At" japanese="測定日時" mode="inline" />
           </label>
           <input
             id={fieldId('measuredAt')}
@@ -145,7 +146,11 @@ export function VitalSignForm({ onSubmit }: VitalSignFormProps) {
           return (
             <div className="field" key={field.key}>
               <label className="field__label" htmlFor={fieldId(field.key)}>
-                {field.english}
+                <BilingualText
+                  english={field.english}
+                  japanese={field.japanese}
+                  mode="inline"
+                />
                 <span className="field__unit">
                   {range.label}
                   {range.unit ? ` / ${range.unit}` : ''}
@@ -178,7 +183,7 @@ export function VitalSignForm({ onSubmit }: VitalSignFormProps) {
 
         <div className="field">
           <label className="field__label" htmlFor={fieldId('consciousness')}>
-            意識レベル
+            <BilingualText english="Consciousness" japanese="意識レベル" mode="inline" />
           </label>
           <select
             id={fieldId('consciousness')}
@@ -197,7 +202,7 @@ export function VitalSignForm({ onSubmit }: VitalSignFormProps) {
 
       <div className="field">
         <label className="field__label" htmlFor={fieldId('memo')}>
-          メモ
+          <BilingualText english="Memo" japanese="メモ" mode="inline" />
         </label>
         <textarea
           id={fieldId('memo')}
@@ -215,7 +220,11 @@ export function VitalSignForm({ onSubmit }: VitalSignFormProps) {
 
       <div className="form-actions form-actions--start">
         <button type="submit" className="button button--primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Add Vital Signs'}
+          <BilingualText
+            english={isSubmitting ? 'Saving...' : 'Add Vital Signs'}
+            japanese={isSubmitting ? '保存中' : 'バイタルを登録'}
+            mode="compact"
+          />
         </button>
       </div>
     </form>

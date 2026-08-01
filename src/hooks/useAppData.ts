@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AppData, NursingNote, Patient, VitalSign } from '../types';
+import type { AppData, Medication, NursingNote, Patient, VitalSign } from '../types';
 import { createEmptyAppData, loadAppData, saveAppData } from '../utils/storage';
 import { createSampleData } from '../data/sampleData';
 import { generateId } from '../utils/id';
@@ -19,6 +19,12 @@ export type VitalSignInput = Omit<VitalSign, 'id' | 'patientId' | 'createdAt'>;
 /** 看護記録登録時にフォームから受け取る値 */
 export type NursingNoteInput = Omit<NursingNote, 'id' | 'patientId' | 'createdAt'>;
 
+/** 薬剤登録・更新時にフォームから受け取る値 */
+export type MedicationInput = Omit<
+  Medication,
+  'id' | 'patientId' | 'createdAt' | 'updatedAt'
+>;
+
 /** 初回読み込み時の状態を組み立てる（サンプルデータ投入を含む） */
 function initializeAppData(): AppData {
   const stored = loadAppData();
@@ -32,6 +38,7 @@ function initializeAppData(): AppData {
       patients: [...stored.patients, ...sample.patients],
       vitalSigns: [...stored.vitalSigns, ...sample.vitalSigns],
       nursingNotes: [...stored.nursingNotes, ...sample.nursingNotes],
+      medications: stored.medications,
       sampleDataLoaded: true,
     };
   }
@@ -51,6 +58,7 @@ export interface UseAppDataResult {
   getPatient: (id: string) => Patient | undefined;
   getVitalSigns: (patientId: string) => VitalSign[];
   getNursingNotes: (patientId: string) => NursingNote[];
+  getMedications: (patientId: string) => Medication[];
   /** 患者IDが既に使われているか（excludeId は編集中の患者自身を除外するため） */
   isPatientIdTaken: (patientId: string, excludeId?: string) => boolean;
   addPatient: (input: PatientInput) => Patient;
@@ -60,6 +68,9 @@ export interface UseAppDataResult {
   deleteVitalSign: (id: string) => void;
   addNursingNote: (patientId: string, input: NursingNoteInput) => void;
   deleteNursingNote: (id: string) => void;
+  addMedication: (patientId: string, input: MedicationInput) => void;
+  updateMedication: (id: string, input: MedicationInput) => void;
+  deleteMedication: (id: string) => void;
 }
 
 export function useAppData(): UseAppDataResult {
@@ -97,6 +108,14 @@ export function useAppData(): UseAppDataResult {
         .filter((note) => note.patientId === patientId)
         .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()),
     [data.nursingNotes],
+  );
+
+  const getMedications = useCallback(
+    (patientId: string) =>
+      data.medications
+        .filter((medication) => medication.patientId === patientId)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [data.medications],
   );
 
   const isPatientIdTaken = useCallback(
@@ -139,6 +158,7 @@ export function useAppData(): UseAppDataResult {
       patients: current.patients.filter((patient) => patient.id !== id),
       vitalSigns: current.vitalSigns.filter((vital) => vital.patientId !== id),
       nursingNotes: current.nursingNotes.filter((note) => note.patientId !== id),
+      medications: current.medications.filter((medication) => medication.patientId !== id),
     }));
   }, []);
 
@@ -189,12 +209,66 @@ export function useAppData(): UseAppDataResult {
     }));
   }, []);
 
+  const addMedication = useCallback(
+    (patientId: string, input: MedicationInput) => {
+      const now = new Date().toISOString();
+      const medication: Medication = {
+        ...input,
+        id: generateId(),
+        patientId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setData((current) => ({
+        ...current,
+        medications: [...current.medications, medication],
+        patients: touchPatient(current.patients, patientId, now),
+      }));
+    },
+    [touchPatient],
+  );
+
+  const updateMedication = useCallback(
+    (id: string, input: MedicationInput) => {
+      const now = new Date().toISOString();
+      setData((current) => {
+        const target = current.medications.find((medication) => medication.id === id);
+        if (!target) return current;
+        return {
+          ...current,
+          medications: current.medications.map((medication) =>
+            medication.id === id ? { ...medication, ...input, updatedAt: now } : medication,
+          ),
+          patients: touchPatient(current.patients, target.patientId, now),
+        };
+      });
+    },
+    [touchPatient],
+  );
+
+  const deleteMedication = useCallback(
+    (id: string) => {
+      const now = new Date().toISOString();
+      setData((current) => {
+        const target = current.medications.find((medication) => medication.id === id);
+        if (!target) return current;
+        return {
+          ...current,
+          medications: current.medications.filter((medication) => medication.id !== id),
+          patients: touchPatient(current.patients, target.patientId, now),
+        };
+      });
+    },
+    [touchPatient],
+  );
+
   return {
     data,
     patients,
     getPatient,
     getVitalSigns,
     getNursingNotes,
+    getMedications,
     isPatientIdTaken,
     addPatient,
     updatePatient,
@@ -203,5 +277,8 @@ export function useAppData(): UseAppDataResult {
     deleteVitalSign,
     addNursingNote,
     deleteNursingNote,
+    addMedication,
+    updateMedication,
+    deleteMedication,
   };
 }

@@ -19,6 +19,9 @@ export type RecordType =
   | 'handover'
   | 'other';
 
+/** 薬剤区分 */
+export type MedicationCategory = 'regular' | 'prn';
+
 /** 患者情報 */
 export interface Patient {
   /** 内部的に使用する一意なID（他データとの紐付けキー） */
@@ -97,6 +100,29 @@ export interface NursingNote {
   createdAt: string;
 }
 
+/** 患者ごとの薬剤情報（登録・表示・履歴管理のみ） */
+export interface Medication {
+  id: string;
+  /** Patient.id への参照 */
+  patientId: string;
+  category: MedicationCategory;
+  /** 薬剤名 */
+  name: string;
+  /** 用量（入力された文字列をそのまま保持する） */
+  dose: string;
+  /** 単位 */
+  unit: string;
+  /** 定期薬の服用タイミング */
+  timing: string;
+  /** 使用目的または臨時薬の使用条件 */
+  indication: string;
+  /** 臨時薬の前回使用日時 (ISO 8601)。未入力の場合は空文字 */
+  lastAdministeredAt: string;
+  memo: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Local Storage に保存するアプリ全体のデータ */
 export interface AppData {
   /** データ構造のバージョン */
@@ -104,6 +130,7 @@ export interface AppData {
   patients: Patient[];
   vitalSigns: VitalSign[];
   nursingNotes: NursingNote[];
+  medications: Medication[];
   /** サンプルデータ投入済みフラグ（重複投入の防止） */
   sampleDataLoaded: boolean;
 }

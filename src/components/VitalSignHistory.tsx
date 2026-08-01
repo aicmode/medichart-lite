@@ -2,6 +2,8 @@ import type { VitalSign } from '../types';
 import { EmptyState } from './EmptyState';
 import { formatDateTime } from '../utils/date';
 import { VITAL_RANGES } from '../utils/validation';
+import { BilingualText } from './BilingualText';
+import { VitalTrend } from './VitalTrend';
 
 interface VitalSignHistoryProps {
   vitalSigns: VitalSign[];
@@ -25,18 +27,20 @@ function formatBloodPressure(vital: VitalSign): string {
 /** 最新バイタルの要約カード */
 function LatestVitalCard({ vital }: { vital: VitalSign }) {
   const items = [
-    { label: 'Temp', value: formatValue(vital.temperature, VITAL_RANGES.temperature.unit) },
-    { label: 'BP', value: formatBloodPressure(vital) },
-    { label: 'Pulse', value: formatValue(vital.pulse, VITAL_RANGES.pulse.unit) },
-    { label: 'Resp', value: formatValue(vital.respiration, VITAL_RANGES.respiration.unit) },
-    { label: 'SpO₂', value: formatValue(vital.spo2, VITAL_RANGES.spo2.unit) },
-    { label: 'Pain', value: vital.painScale === null ? '—' : `${vital.painScale} / 10` },
+    { label: 'Temp / 体温', value: formatValue(vital.temperature, VITAL_RANGES.temperature.unit) },
+    { label: 'BP / 血圧', value: formatBloodPressure(vital) },
+    { label: 'Pulse / 脈拍', value: formatValue(vital.pulse, VITAL_RANGES.pulse.unit) },
+    { label: 'Resp / 呼吸数', value: formatValue(vital.respiration, VITAL_RANGES.respiration.unit) },
+    { label: 'SpO₂ / 酸素飽和度', value: formatValue(vital.spo2, VITAL_RANGES.spo2.unit) },
+    { label: 'Pain / 疼痛', value: vital.painScale === null ? '—' : `${vital.painScale} / 10` },
   ];
 
   return (
     <div className="latest-vital">
       <div className="latest-vital__header">
-        <span className="latest-vital__label">Latest Measurement</span>
+        <span className="latest-vital__label">
+          <BilingualText english="Latest Measurement" japanese="最新測定" mode="inline" />
+        </span>
         <span className="latest-vital__time">{formatDateTime(vital.measuredAt)}</span>
       </div>
       <dl className="latest-vital__grid">
@@ -60,7 +64,7 @@ export function VitalSignHistory({ vitalSigns, onRequestDelete }: VitalSignHisto
   if (vitalSigns.length === 0) {
     return (
       <EmptyState
-        title="No Vital Signs"
+        title="No Vital Signs / バイタル未登録"
         description="この患者のバイタルはまだ登録されていません。上のフォームから追加できます。"
       />
     );
@@ -72,6 +76,8 @@ export function VitalSignHistory({ vitalSigns, onRequestDelete }: VitalSignHisto
     <div className="vital-history">
       <LatestVitalCard vital={latest} />
 
+      <VitalTrend vitalSigns={vitalSigns} />
+
       <div className="table-scroll">
         <table className="data-table">
           <caption className="data-table__caption">
@@ -79,39 +85,39 @@ export function VitalSignHistory({ vitalSigns, onRequestDelete }: VitalSignHisto
           </caption>
           <thead>
             <tr>
-              <th scope="col">Measured At</th>
-              <th scope="col">Temp</th>
-              <th scope="col">BP</th>
-              <th scope="col">Pulse</th>
-              <th scope="col">Resp</th>
-              <th scope="col">SpO₂</th>
-              <th scope="col">Pain</th>
-              <th scope="col">Consciousness</th>
-              <th scope="col">Memo</th>
+              <th scope="col">Measured At / 測定日時</th>
+              <th scope="col">Temp / 体温</th>
+              <th scope="col">BP / 血圧</th>
+              <th scope="col">Pulse / 脈拍</th>
+              <th scope="col">Resp / 呼吸数</th>
+              <th scope="col">SpO₂ / 酸素飽和度</th>
+              <th scope="col">Pain / 疼痛</th>
+              <th scope="col">Consciousness / 意識</th>
+              <th scope="col">Memo / メモ</th>
               <th scope="col">
-                <span className="visually-hidden">Actions</span>
+                <span className="visually-hidden">Actions / 操作</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {vitalSigns.map((vital) => (
               <tr key={vital.id}>
-                <td data-label="Measured At">{formatDateTime(vital.measuredAt)}</td>
-                <td data-label="Temp">{formatValue(vital.temperature, '℃')}</td>
-                <td data-label="BP">{formatBloodPressure(vital)}</td>
-                <td data-label="Pulse">{formatValue(vital.pulse, '')}</td>
-                <td data-label="Resp">{formatValue(vital.respiration, '')}</td>
-                <td data-label="SpO₂">{formatValue(vital.spo2, '%')}</td>
-                <td data-label="Pain">{vital.painScale === null ? '—' : vital.painScale}</td>
-                <td data-label="Consciousness">{vital.consciousness || '—'}</td>
-                <td data-label="Memo">{vital.memo || '—'}</td>
-                <td data-label="Actions">
+                <td data-label="Measured At / 測定日時">{formatDateTime(vital.measuredAt)}</td>
+                <td data-label="Temp / 体温">{formatValue(vital.temperature, '℃')}</td>
+                <td data-label="BP / 血圧">{formatBloodPressure(vital)}</td>
+                <td data-label="Pulse / 脈拍">{formatValue(vital.pulse, '')}</td>
+                <td data-label="Resp / 呼吸数">{formatValue(vital.respiration, '')}</td>
+                <td data-label="SpO₂ / 酸素飽和度">{formatValue(vital.spo2, '%')}</td>
+                <td data-label="Pain / 疼痛">{vital.painScale === null ? '—' : vital.painScale}</td>
+                <td data-label="Consciousness / 意識">{vital.consciousness || '—'}</td>
+                <td data-label="Memo / メモ">{vital.memo || '—'}</td>
+                <td data-label="Actions / 操作">
                   <button
                     type="button"
                     className="button button--danger-ghost button--small"
                     onClick={() => onRequestDelete(vital)}
                   >
-                    Delete
+                    <BilingualText english="Delete" japanese="削除" mode="compact" />
                   </button>
                 </td>
               </tr>

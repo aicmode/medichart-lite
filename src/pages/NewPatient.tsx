@@ -2,6 +2,7 @@ import type { Route } from '../types';
 import type { PatientInput } from '../hooks/useAppData';
 import { Header } from '../components/Header';
 import { PatientForm } from '../components/PatientForm';
+import { BilingualText } from '../components/BilingualText';
 
 interface NewPatientProps {
   isPatientIdTaken: (patientId: string) => boolean;
@@ -15,6 +16,7 @@ export function NewPatient({ isPatientIdTaken, onCreate, onNavigate }: NewPatien
     <div className="page">
       <Header
         title="New Patient"
+        titleJapanese="患者登録"
         description="架空の患者情報を登録します。実在する患者の情報は入力しないでください。"
         actions={
           <button
@@ -22,7 +24,7 @@ export function NewPatient({ isPatientIdTaken, onCreate, onNavigate }: NewPatien
             className="button button--ghost"
             onClick={() => onNavigate({ name: 'patients' })}
           >
-            Back to Patients
+            <BilingualText english="Back to Patients" japanese="患者一覧へ戻る" mode="compact" />
           </button>
         }
       />
@@ -30,6 +32,7 @@ export function NewPatient({ isPatientIdTaken, onCreate, onNavigate }: NewPatien
       <PatientForm
         isPatientIdTaken={isPatientIdTaken}
         submitLabel="Register Patient"
+        submitJapaneseLabel="患者を登録"
         onSubmit={onCreate}
         onCancel={() => onNavigate({ name: 'patients' })}
       />

@@ -1,10 +1,12 @@
-import type { Route } from '../types';
+import type { Patient, Route } from '../types';
+import { BilingualText } from './BilingualText';
+import { PatientSearch } from './PatientSearch';
 
 /** ナビゲーション項目 */
-const NAV_ITEMS: { key: Route['name']; label: string; route: Route }[] = [
-  { key: 'dashboard', label: 'Dashboard', route: { name: 'dashboard' } },
-  { key: 'patients', label: 'Patients', route: { name: 'patients' } },
-  { key: 'new-patient', label: 'New Patient', route: { name: 'new-patient' } },
+const NAV_ITEMS: { key: Route['name']; label: string; japanese: string; route: Route }[] = [
+  { key: 'dashboard', label: 'Dashboard', japanese: 'ダッシュボード', route: { name: 'dashboard' } },
+  { key: 'patients', label: 'Patients', japanese: '患者一覧', route: { name: 'patients' } },
+  { key: 'new-patient', label: 'New Patient', japanese: '患者登録', route: { name: 'new-patient' } },
 ];
 
 interface SidebarProps {
@@ -12,9 +14,10 @@ interface SidebarProps {
   onNavigate: (route: Route) => void;
   /** 登録患者数（バッジ表示用） */
   patientCount: number;
+  patients: Patient[];
 }
 
-export function Sidebar({ currentRoute, onNavigate, patientCount }: SidebarProps) {
+export function Sidebar({ currentRoute, onNavigate, patientCount, patients }: SidebarProps) {
   // 患者詳細を開いている間も Patients をアクティブ扱いにする
   const activeKey: Route['name'] =
     currentRoute.name === 'patient-detail' ? 'patients' : currentRoute.name;
@@ -31,6 +34,8 @@ export function Sidebar({ currentRoute, onNavigate, patientCount }: SidebarProps
         </span>
       </div>
 
+      <PatientSearch patients={patients} onNavigate={onNavigate} />
+
       <nav className="sidebar__nav" aria-label="Main navigation">
         <ul className="sidebar__list">
           {NAV_ITEMS.map((item) => {
@@ -43,7 +48,7 @@ export function Sidebar({ currentRoute, onNavigate, patientCount }: SidebarProps
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => onNavigate(item.route)}
                 >
-                  <span>{item.label}</span>
+                  <BilingualText english={item.label} japanese={item.japanese} mode="compact" />
                   {item.key === 'patients' ? (
                     <span className="sidebar__badge">{patientCount}</span>
                   ) : null}

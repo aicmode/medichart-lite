@@ -3,6 +3,7 @@ import type { AppData, Patient, Route } from '../types';
 import { Header } from '../components/Header';
 import { EmptyState } from '../components/EmptyState';
 import { formatAge, formatDateTime, isSameLocalDay } from '../utils/date';
+import { BilingualText } from '../components/BilingualText';
 
 interface DashboardProps {
   data: AppData;
@@ -13,16 +14,19 @@ interface DashboardProps {
 
 interface StatCardProps {
   label: string;
+  japanese: string;
   value: string;
   description: string;
   /** 日時のような長い値を小さめに表示する */
   compact?: boolean;
 }
 
-function StatCard({ label, value, description, compact = false }: StatCardProps) {
+function StatCard({ label, japanese, value, description, compact = false }: StatCardProps) {
   return (
     <div className="stat-card">
-      <p className="stat-card__label">{label}</p>
+      <p className="stat-card__label">
+        <BilingualText english={label} japanese={japanese} mode="stacked" />
+      </p>
       <p className={`stat-card__value${compact ? ' stat-card__value--compact' : ''}`}>{value}</p>
       <p className="stat-card__description">{description}</p>
     </div>
@@ -69,6 +73,7 @@ export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
     <div className="page">
       <Header
         title="Dashboard"
+        titleJapanese="ダッシュボード"
         description="登録状況の概要です。すべて架空データのデモ表示であり、医療的な判断は行いません。"
         actions={
           <button
@@ -76,7 +81,7 @@ export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
             className="button button--primary"
             onClick={() => onNavigate({ name: 'new-patient' })}
           >
-            New Patient
+            <BilingualText english="New Patient" japanese="患者登録" mode="compact" />
           </button>
         }
       />
@@ -84,21 +89,25 @@ export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
       <section className="stat-grid" aria-label="Summary">
         <StatCard
           label="Patients"
+          japanese="登録患者数"
           value={`${stats.patientCount}`}
           description="登録されている患者数"
         />
         <StatCard
           label="Today's Records"
+          japanese="本日の記録"
           value={`${stats.todayRecords}`}
           description="本日のバイタル・看護記録の合計件数"
         />
         <StatCard
           label="Diagnoses"
+          japanese="登録疾患"
           value={`${stats.diagnosisCount}`}
           description="登録されている疾患名の種類数"
         />
         <StatCard
           label="Last Record"
+          japanese="最終記録"
           value={stats.latestRecordAt === null ? '—' : formatDateTime(stats.latestRecordAt)}
           description="最新の記録日時"
           compact
@@ -107,19 +116,25 @@ export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
 
       <section className="card">
         <div className="card__header">
-          <h2 className="card__title">Recently Updated Patients</h2>
+          <h2 className="card__title">
+            <BilingualText
+              english="Recently Updated Patients"
+              japanese="最近更新された患者"
+              mode="inline"
+            />
+          </h2>
           <button
             type="button"
             className="button button--ghost button--small"
             onClick={() => onNavigate({ name: 'patients' })}
           >
-            View All
+            <BilingualText english="View All" japanese="すべて表示" mode="compact" />
           </button>
         </div>
 
         {recentPatients.length === 0 ? (
           <EmptyState
-            title="No Patients Yet"
+            title="No Patients Yet / 患者未登録"
             description="患者がまだ登録されていません。New Patient から架空の患者を登録してください。"
             action={
               <button
@@ -127,7 +142,7 @@ export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
                 className="button button--primary"
                 onClick={() => onNavigate({ name: 'new-patient' })}
               >
-                New Patient
+                <BilingualText english="New Patient" japanese="患者登録" mode="compact" />
               </button>
             }
           />

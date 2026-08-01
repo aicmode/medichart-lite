@@ -1389,3 +1389,601 @@ button {
     max-width: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   英語・日本語の併記
+   -------------------------------------------------------------------------- */
+
+.bilingual {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+.bilingual--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.bilingual--inline,
+.bilingual--compact {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.bilingual__english {
+  min-width: 0;
+}
+
+.bilingual__japanese {
+  color: var(--text-muted);
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.button--primary .bilingual__japanese,
+.button--danger .bilingual__japanese,
+.sidebar .bilingual__japanese {
+  color: currentColor;
+  opacity: 0.82;
+}
+
+.page-header__title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.page-header__title-ja {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.58em;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.stat-card__label .bilingual__japanese {
+  font-size: 0.92em;
+}
+
+/* --------------------------------------------------------------------------
+   共通患者検索
+   -------------------------------------------------------------------------- */
+
+.patient-search {
+  position: relative;
+  width: 100%;
+}
+
+.patient-search__input-wrap {
+  position: relative;
+}
+
+.patient-search__icon {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  color: #9ebbd7;
+  font-size: 1rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.patient-search__input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px 9px 34px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: var(--radius);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.patient-search__input::placeholder {
+  color: #bad0e4;
+}
+
+.patient-search__input:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.patient-search__input:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.patient-search__popover {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 50;
+  width: min(360px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+
+.patient-search__result {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 13px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.patient-search__result:last-child {
+  border-bottom: 0;
+}
+
+.patient-search__result:hover,
+.patient-search__result--active {
+  background: var(--blue-50);
+}
+
+.patient-search__result-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.patient-search__result-main .mono {
+  color: var(--blue-700);
+  font-weight: 700;
+}
+
+.patient-search__result-meta,
+.patient-search__empty {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.patient-search__empty {
+  padding: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   患者概要・アレルギー
+   -------------------------------------------------------------------------- */
+
+.patient-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr);
+  gap: 20px;
+  align-items: stretch;
+  padding: 22px 24px;
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
+.patient-summary__identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.patient-summary__id {
+  color: #a9d6fb;
+  font-weight: 700;
+}
+
+.patient-summary h2 {
+  margin-top: 2px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.patient-summary__identity > p {
+  color: #dbe8f5;
+}
+
+.patient-summary__diagnosis {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.patient-summary__diagnosis span {
+  color: #a9c6e4;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.allergy-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.allergy-alert--compact {
+  margin-bottom: 0;
+  align-self: stretch;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.allergy-alert--warning {
+  border-color: #e4a6a2;
+  background: var(--danger-bg);
+  color: var(--danger-dark);
+}
+
+.allergy-alert--compact.allergy-alert--warning {
+  border-color: #ffb8b3;
+  background: rgba(111, 15, 12, 0.76);
+  color: #fff;
+}
+
+.allergy-alert__icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.allergy-alert__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.allergy-alert__title {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.allergy-alert__value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.allergy-alert--compact .bilingual__japanese {
+  color: currentColor;
+  opacity: 0.8;
+}
+
+.medical-definition-grid {
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   薬剤情報
+   -------------------------------------------------------------------------- */
+
+.medication-safety {
+  margin-bottom: 18px;
+  padding: 11px 13px;
+  border-left: 3px solid var(--blue-600);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--blue-50);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.medication-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.medication-form__header h4 {
+  margin: 0;
+  color: var(--navy-800);
+  font-size: 1rem;
+}
+
+.medication-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.medication-group {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.medication-group__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.medication-group__header h3 {
+  margin: 0;
+  color: var(--navy-800);
+  font-size: 0.98rem;
+}
+
+.medication-group__header p {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.medication-empty {
+  padding: 24px 10px;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.medication-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.medication-item {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue-600);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.medication-item__main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.medication-item__main strong {
+  color: var(--navy-900);
+  overflow-wrap: anywhere;
+}
+
+.medication-item__dose {
+  color: var(--blue-700);
+  font-weight: 700;
+}
+
+.medication-item__details {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.medication-item__details div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.medication-item__details dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.medication-item__details dd {
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.medication-item__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   バイタルトレンド
+   -------------------------------------------------------------------------- */
+
+.vital-trends {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vital-trends__header h3 {
+  color: var(--navy-800);
+  font-size: 1rem;
+}
+
+.vital-trends__header p {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.vital-trends__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.trend-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.trend-card h4 {
+  margin: 0;
+  color: var(--navy-800);
+  font-size: 0.82rem;
+}
+
+.trend-card__chart {
+  display: block;
+  width: 100%;
+  height: 82px;
+  margin: 6px 0;
+  overflow: visible;
+}
+
+.trend-card__axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.trend-card__line {
+  fill: none;
+  stroke: var(--blue-600);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trend-card circle {
+  fill: var(--surface);
+  stroke: var(--blue-600);
+  stroke-width: 2;
+}
+
+.trend-card__values {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 3px;
+}
+
+.trend-card__values li {
+  display: flex;
+  min-width: 112px;
+  flex-direction: column;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.trend-card__values time {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.trend-card__values strong {
+  color: var(--navy-800);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+  .patient-search {
+    flex: 1 1 320px;
+    width: auto;
+    max-width: 520px;
+    margin-left: auto;
+  }
+
+  .medication-groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar__brand {
+    width: 100%;
+  }
+
+  .patient-search {
+    order: 2;
+    width: 100%;
+    max-width: none;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .sidebar__nav {
+    order: 3;
+  }
+
+  .sidebar__link .bilingual--compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .sidebar__link .bilingual__japanese {
+    font-size: 0.7em;
+  }
+
+  .patient-summary {
+    grid-template-columns: 1fr;
+    padding: 18px 16px;
+  }
+
+  .medication-group {
+    padding: 14px;
+  }
+
+  .medication-group__header {
+    flex-direction: column;
+  }
+
+  .medication-group__header .button {
+    width: 100%;
+  }
+
+  .medication-item__details div {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .medication-item__actions .button {
+    flex: 1;
+  }
+
+  .bilingual--inline {
+    gap: 5px;
+  }
+}

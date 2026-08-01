@@ -8,6 +8,7 @@ import { NewPatient } from './pages/NewPatient';
 import { PatientDetail } from './pages/PatientDetail';
 import { useAppData } from './hooks/useAppData';
 import { generateId } from './utils/id';
+import { BilingualText } from './components/BilingualText';
 
 /** トーストの自動消去までの時間 (ms) */
 const TOAST_DURATION = 4000;
@@ -23,6 +24,7 @@ export default function App() {
     getPatient,
     getVitalSigns,
     getNursingNotes,
+    getMedications,
     isPatientIdTaken,
     addPatient,
     updatePatient,
@@ -31,6 +33,9 @@ export default function App() {
     deleteVitalSign,
     addNursingNote,
     deleteNursingNote,
+    addMedication,
+    updateMedication,
+    deleteMedication,
   } = useAppData();
 
   const showToast = useCallback((type: ToastMessage['type'], text: string) => {
@@ -79,7 +84,7 @@ export default function App() {
           return (
             <div className="page">
               <EmptyState
-                title="Patient Not Found"
+                title="Patient Not Found / 患者が見つかりません"
                 description="対象の患者が見つかりませんでした。既に削除された可能性があります。"
                 action={
                   <button
@@ -87,7 +92,11 @@ export default function App() {
                     className="button button--primary"
                     onClick={() => navigate({ name: 'patients' })}
                   >
-                    Back to Patients
+                    <BilingualText
+                      english="Back to Patients"
+                      japanese="患者一覧へ戻る"
+                      mode="compact"
+                    />
                   </button>
                 }
               />
@@ -100,6 +109,7 @@ export default function App() {
             patient={patient}
             vitalSigns={getVitalSigns(patient.id)}
             nursingNotes={getNursingNotes(patient.id)}
+            medications={getMedications(patient.id)}
             isPatientIdTaken={(patientId) => isPatientIdTaken(patientId, patient.id)}
             onUpdatePatient={(input) => {
               updatePatient(patient.id, input);
@@ -126,6 +136,18 @@ export default function App() {
               deleteNursingNote(id);
               showToast('success', '看護記録を削除しました。');
             }}
+            onAddMedication={(input) => {
+              addMedication(patient.id, input);
+              showToast('success', '薬剤情報を登録しました。');
+            }}
+            onUpdateMedication={(id, input) => {
+              updateMedication(id, input);
+              showToast('success', '薬剤情報を更新しました。');
+            }}
+            onDeleteMedication={(id) => {
+              deleteMedication(id);
+              showToast('success', '薬剤情報を削除しました。');
+            }}
             onNavigate={navigate}
           />
         );
@@ -141,6 +163,7 @@ export default function App() {
       currentRoute={route}
       onNavigate={navigate}
       patientCount={data.patients.length}
+      patients={patients}
       toast={toast}
       onDismissToast={() => setToast(null)}
     >

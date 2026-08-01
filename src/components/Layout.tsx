@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Route, ToastMessage } from '../types';
+import type { Patient, Route, ToastMessage } from '../types';
 import { Sidebar } from './Sidebar';
 import { DisclaimerBanner } from './DisclaimerBanner';
 import { Toast } from './Toast';
@@ -8,6 +8,7 @@ interface LayoutProps {
   currentRoute: Route;
   onNavigate: (route: Route) => void;
   patientCount: number;
+  patients: Patient[];
   toast: ToastMessage | null;
   onDismissToast: () => void;
   children: ReactNode;
@@ -18,13 +19,19 @@ export function Layout({
   currentRoute,
   onNavigate,
   patientCount,
+  patients,
   toast,
   onDismissToast,
   children,
 }: LayoutProps) {
   return (
     <div className="app-shell">
-      <Sidebar currentRoute={currentRoute} onNavigate={onNavigate} patientCount={patientCount} />
+      <Sidebar
+        currentRoute={currentRoute}
+        onNavigate={onNavigate}
+        patientCount={patientCount}
+        patients={patients}
+      />
 
       <div className="app-main">
         <DisclaimerBanner />

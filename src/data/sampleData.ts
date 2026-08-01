@@ -13,7 +13,10 @@ function hoursAgo(hours: number): string {
 }
 
 /** 架空患者2名分のサンプルデータを生成する */
-export function createSampleData(): Pick<AppData, 'patients' | 'vitalSigns' | 'nursingNotes'> {
+export function createSampleData(): Pick<
+  AppData,
+  'patients' | 'vitalSigns' | 'nursingNotes' | 'medications'
+> {
   const now = new Date().toISOString();
 
   const taro: Patient = {
@@ -135,5 +138,6 @@ export function createSampleData(): Pick<AppData, 'patients' | 'vitalSigns' | 'n
     ],
     vitalSigns,
     nursingNotes,
+    medications: [],
   };
 }

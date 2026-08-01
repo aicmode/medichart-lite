@@ -2,6 +2,7 @@ import type { NursingNote } from '../types';
 import { EmptyState } from './EmptyState';
 import { recordTypeLabel } from '../data/options';
 import { formatDateTime } from '../utils/date';
+import { BilingualText } from './BilingualText';
 
 interface NursingNoteListProps {
   notes: NursingNote[];
@@ -13,7 +14,7 @@ export function NursingNoteList({ notes, onRequestDelete }: NursingNoteListProps
   if (notes.length === 0) {
     return (
       <EmptyState
-        title="No Nursing Notes"
+        title="No Nursing Notes / 看護記録未登録"
         description="この患者の看護記録はまだ登録されていません。上のフォームから追加できます。"
       />
     );
@@ -34,7 +35,7 @@ export function NursingNoteList({ notes, onRequestDelete }: NursingNoteListProps
               className="button button--danger-ghost button--small"
               onClick={() => onRequestDelete(note)}
             >
-              Delete
+              <BilingualText english="Delete" japanese="削除" mode="compact" />
             </button>
           </div>
           <p className="note-item__body">{note.body}</p>

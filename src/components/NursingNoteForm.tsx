@@ -5,6 +5,7 @@ import type { NursingNoteInput } from '../hooks/useAppData';
 import { RECORD_TYPE_OPTIONS } from '../data/options';
 import { dateTimeLocalToISO, toDateTimeLocalValue } from '../utils/date';
 import { isBlank } from '../utils/validation';
+import { BilingualText } from './BilingualText';
 
 interface NursingNoteFormProps {
   onSubmit: (input: NursingNoteInput) => void;
@@ -78,7 +79,7 @@ export function NursingNoteForm({ onSubmit }: NursingNoteFormProps) {
       <div className="form-grid form-grid--compact">
         <div className="field">
           <label className="field__label" htmlFor={fieldId('recordedAt')}>
-            記録日時
+            <BilingualText english="Recorded At" japanese="記録日時" mode="inline" />
           </label>
           <input
             id={fieldId('recordedAt')}
@@ -98,7 +99,7 @@ export function NursingNoteForm({ onSubmit }: NursingNoteFormProps) {
 
         <div className="field">
           <label className="field__label" htmlFor={fieldId('author')}>
-            記録者名
+            <BilingualText english="Recorder" japanese="記録者名" mode="inline" />
           </label>
           <input
             id={fieldId('author')}
@@ -113,7 +114,7 @@ export function NursingNoteForm({ onSubmit }: NursingNoteFormProps) {
 
         <div className="field">
           <label className="field__label" htmlFor={fieldId('recordType')}>
-            記録種別
+            <BilingualText english="Record Type" japanese="記録種別" mode="inline" />
           </label>
           <select
             id={fieldId('recordType')}
@@ -132,7 +133,8 @@ export function NursingNoteForm({ onSubmit }: NursingNoteFormProps) {
 
       <div className="field">
         <label className="field__label" htmlFor={fieldId('body')}>
-          記録本文 <span className="field__required">必須</span>
+          <BilingualText english="Note" japanese="記録本文" mode="inline" />
+          <span className="field__required">必須</span>
         </label>
         <textarea
           id={fieldId('body')}
@@ -153,7 +155,11 @@ export function NursingNoteForm({ onSubmit }: NursingNoteFormProps) {
 
       <div className="form-actions form-actions--start">
         <button type="submit" className="button button--primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Add Note'}
+          <BilingualText
+            english={isSubmitting ? 'Saving...' : 'Add Note'}
+            japanese={isSubmitting ? '保存中' : '看護記録を登録'}
+            mode="compact"
+          />
         </button>
       </div>
     </form>

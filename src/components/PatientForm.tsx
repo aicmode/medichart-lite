@@ -6,6 +6,7 @@ import { BLOOD_TYPE_OPTIONS, GENDER_OPTIONS } from '../data/options';
 import { DiagnosisSelector } from './DiagnosisSelector';
 import { calculateAge, todayDateValue } from '../utils/date';
 import { isBlank, isFutureDate, normalizeText } from '../utils/validation';
+import { BilingualText } from './BilingualText';
 
 interface PatientFormProps {
   /** 編集時の初期値。未指定なら新規登録フォームとして動作する */
@@ -13,6 +14,7 @@ interface PatientFormProps {
   /** 患者IDの重複判定（編集中の患者自身は除外済みで渡す） */
   isPatientIdTaken: (patientId: string) => boolean;
   submitLabel: string;
+  submitJapaneseLabel: string;
   onSubmit: (input: PatientInput) => void;
   onCancel?: () => void;
 }
@@ -55,6 +57,7 @@ export function PatientForm({
   initialPatient,
   isPatientIdTaken,
   submitLabel,
+  submitJapaneseLabel,
   onSubmit,
   onCancel,
 }: PatientFormProps) {
@@ -149,11 +152,14 @@ export function PatientForm({
   return (
     <form className="form" onSubmit={handleSubmit} noValidate>
       <section className="card">
-        <h2 className="card__title">Basic Information</h2>
+        <h2 className="card__title">
+          <BilingualText english="Basic Information" japanese="基本情報" mode="inline" />
+        </h2>
         <div className="form-grid">
           <div className="field">
             <label className="field__label" htmlFor={ids.patientId}>
-              Patient ID <span className="field__required">必須</span>
+              <BilingualText english="Patient ID" japanese="患者ID" mode="inline" />
+              <span className="field__required">必須</span>
             </label>
             <input
               id={ids.patientId}
@@ -176,7 +182,8 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.name}>
-              Name <span className="field__required">必須</span>
+              <BilingualText english="Name" japanese="氏名" mode="inline" />
+              <span className="field__required">必須</span>
             </label>
             <input
               id={ids.name}
@@ -199,7 +206,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.dateOfBirth}>
-              Date of Birth
+              <BilingualText english="Date of Birth" japanese="生年月日" mode="inline" />
             </label>
             <input
               id={ids.dateOfBirth}
@@ -223,7 +230,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.gender}>
-              Gender
+              <BilingualText english="Gender" japanese="性別" mode="inline" />
             </label>
             <select
               id={ids.gender}
@@ -242,7 +249,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.room}>
-              Room
+              <BilingualText english="Room" japanese="病室" mode="inline" />
             </label>
             <input
               id={ids.room}
@@ -258,7 +265,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.bloodType}>
-              Blood Type
+              <BilingualText english="Blood Type" japanese="血液型" mode="inline" />
             </label>
             <select
               id={ids.bloodType}
@@ -278,7 +285,9 @@ export function PatientForm({
       </section>
 
       <section className="card">
-        <h2 className="card__title">Diagnoses</h2>
+        <h2 className="card__title">
+          <BilingualText english="Diagnoses" japanese="疾患" mode="inline" />
+        </h2>
         <p className="card__description">
           疾患名をテンプレートから選ぶか、自由入力で追加できます。入力補助のための一覧であり、診断を行う機能ではありません。
         </p>
@@ -291,11 +300,13 @@ export function PatientForm({
       </section>
 
       <section className="card">
-        <h2 className="card__title">Medical Information</h2>
+        <h2 className="card__title">
+          <BilingualText english="Medical Information" japanese="医療情報" mode="inline" />
+        </h2>
         <div className="form-grid">
           <div className="field">
             <label className="field__label" htmlFor={ids.allergies}>
-              Allergies
+              <BilingualText english="Allergies" japanese="アレルギー" mode="inline" />
             </label>
             <textarea
               id={ids.allergies}
@@ -310,7 +321,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.medicalHistory}>
-              Medical History
+              <BilingualText english="Medical History" japanese="既往歴" mode="inline" />
             </label>
             <textarea
               id={ids.medicalHistory}
@@ -325,7 +336,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.chiefComplaint}>
-              Chief Complaint
+              <BilingualText english="Chief Complaint" japanese="主訴" mode="inline" />
             </label>
             <textarea
               id={ids.chiefComplaint}
@@ -340,7 +351,7 @@ export function PatientForm({
 
           <div className="field">
             <label className="field__label" htmlFor={ids.notes}>
-              Notes
+              <BilingualText english="Notes" japanese="備考" mode="inline" />
             </label>
             <textarea
               id={ids.notes}
@@ -358,11 +369,15 @@ export function PatientForm({
       <div className="form-actions">
         {onCancel ? (
           <button type="button" className="button button--ghost" onClick={onCancel}>
-            Cancel
+            <BilingualText english="Cancel" japanese="キャンセル" mode="compact" />
           </button>
         ) : null}
         <button type="submit" className="button button--primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
+          <BilingualText
+            english={isSubmitting ? 'Saving...' : submitLabel}
+            japanese={isSubmitting ? '保存中' : submitJapaneseLabel}
+            mode="compact"
+          />
         </button>
       </div>
     </form>

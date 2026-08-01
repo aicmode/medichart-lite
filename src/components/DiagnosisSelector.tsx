@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { DIAGNOSIS_TEMPLATES } from '../data/diagnosisTemplates';
 import { normalizeText } from '../utils/validation';
+import { BilingualText } from './BilingualText';
 
 interface DiagnosisSelectorProps {
   /** 選択済みの疾患名 */
@@ -59,7 +60,11 @@ export function DiagnosisSelector({ value, onChange }: DiagnosisSelectorProps) {
     <div className="diagnosis-selector">
       <div className="diagnosis-selector__templates">
         <p className="field__label" id={`${inputId}-templates`}>
-          テンプレートから選択（複数選択できます）
+          <BilingualText
+            english="Diagnosis Templates"
+            japanese="疾患テンプレート（複数選択できます）"
+            mode="inline"
+          />
         </p>
         <div className="chip-grid" role="group" aria-labelledby={`${inputId}-templates`}>
           {DIAGNOSIS_TEMPLATES.map((template) => {
@@ -82,7 +87,11 @@ export function DiagnosisSelector({ value, onChange }: DiagnosisSelectorProps) {
 
       <div className="field">
         <label className="field__label" htmlFor={inputId}>
-          テンプレートにない疾患名を追加
+          <BilingualText
+            english="Custom Diagnosis"
+            japanese="疾患名を自由入力"
+            mode="inline"
+          />
         </label>
         <div className="input-row">
           <input
@@ -106,7 +115,7 @@ export function DiagnosisSelector({ value, onChange }: DiagnosisSelectorProps) {
             }}
           />
           <button type="button" className="button button--secondary" onClick={handleAddCustom}>
-            Add
+            <BilingualText english="Add Diagnosis" japanese="疾患を追加" mode="compact" />
           </button>
         </div>
         {error ? (

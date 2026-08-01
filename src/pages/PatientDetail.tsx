@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import type { NursingNote, Patient, Route, VitalSign } from '../types';
-import type { NursingNoteInput, PatientInput, VitalSignInput } from '../hooks/useAppData';
+import type { Medication, NursingNote, Patient, Route, VitalSign } from '../types';
+import type {
+  MedicationInput,
+  NursingNoteInput,
+  PatientInput,
+  VitalSignInput,
+} from '../hooks/useAppData';
 import { Header } from '../components/Header';
 import { PatientForm } from '../components/PatientForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -8,6 +13,9 @@ import { VitalSignForm } from '../components/VitalSignForm';
 import { VitalSignHistory } from '../components/VitalSignHistory';
 import { NursingNoteForm } from '../components/NursingNoteForm';
 import { NursingNoteList } from '../components/NursingNoteList';
+import { AllergyAlert } from '../components/AllergyAlert';
+import { BilingualText } from '../components/BilingualText';
+import { MedicationSection } from '../components/MedicationSection';
 import { bloodTypeLabel, genderLabel } from '../data/options';
 import { formatAge, formatDate, formatDateTime } from '../utils/date';
 
@@ -15,6 +23,7 @@ interface PatientDetailProps {
   patient: Patient;
   vitalSigns: VitalSign[];
   nursingNotes: NursingNote[];
+  medications: Medication[];
   isPatientIdTaken: (patientId: string) => boolean;
   onUpdatePatient: (input: PatientInput) => void;
   onDeletePatient: () => void;
@@ -22,10 +31,12 @@ interface PatientDetailProps {
   onDeleteVitalSign: (id: string) => void;
   onAddNursingNote: (input: NursingNoteInput) => void;
   onDeleteNursingNote: (id: string) => void;
+  onAddMedication: (input: MedicationInput) => void;
+  onUpdateMedication: (id: string, input: MedicationInput) => void;
+  onDeleteMedication: (id: string) => void;
   onNavigate: (route: Route) => void;
 }
 
-/** 削除確認の対象 */
 type PendingDeletion =
   | { kind: 'patient' }
   | { kind: 'vital'; vital: VitalSign }
@@ -33,24 +44,28 @@ type PendingDeletion =
   | null;
 
 interface DefinitionItemProps {
-  term: string;
+  english: string;
+  japanese: string;
   description: string;
 }
 
-function DefinitionItem({ term, description }: DefinitionItemProps) {
+function DefinitionItem({ english, japanese, description }: DefinitionItemProps) {
   return (
     <div className="definition-item">
-      <dt>{term}</dt>
+      <dt>
+        <BilingualText english={english} japanese={japanese} mode="stacked" />
+      </dt>
       <dd>{description || '—'}</dd>
     </div>
   );
 }
 
-/** Patient Detail 画面 */
+/** Patient Detail / 患者詳細画面 */
 export function PatientDetail({
   patient,
   vitalSigns,
   nursingNotes,
+  medications,
   isPatientIdTaken,
   onUpdatePatient,
   onDeletePatient,
@@ -58,6 +73,9 @@ export function PatientDetail({
   onDeleteVitalSign,
   onAddNursingNote,
   onDeleteNursingNote,
+  onAddMedication,
+  onUpdateMedication,
+  onDeleteMedication,
   onNavigate,
 }: PatientDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -65,14 +83,9 @@ export function PatientDetail({
 
   const handleConfirmDelete = () => {
     if (pendingDeletion === null) return;
-
-    if (pendingDeletion.kind === 'patient') {
-      onDeletePatient();
-    } else if (pendingDeletion.kind === 'vital') {
-      onDeleteVitalSign(pendingDeletion.vital.id);
-    } else {
-      onDeleteNursingNote(pendingDeletion.note.id);
-    }
+    if (pendingDeletion.kind === 'patient') onDeletePatient();
+    else if (pendingDeletion.kind === 'vital') onDeleteVitalSign(pendingDeletion.vital.id);
+    else onDeleteNursingNote(pendingDeletion.note.id);
     setPendingDeletion(null);
   };
 
@@ -82,21 +95,21 @@ export function PatientDetail({
     }
     if (pendingDeletion.kind === 'patient') {
       return {
-        title: 'Delete Patient',
+        title: 'Delete Patient / 患者を削除',
         message:
-          'この患者を削除します。紐づくバイタルサインと看護記録もすべて削除され、元に戻せません。',
-        detail: `${patient.patientId} / ${patient.name}（バイタル ${vitalSigns.length}件、看護記録 ${nursingNotes.length}件）`,
+          'この患者を削除します。紐づくバイタルサイン、看護記録、薬剤情報もすべて削除され、元に戻せません。',
+        detail: `${patient.patientId} / ${patient.name}（バイタル ${vitalSigns.length}件、看護記録 ${nursingNotes.length}件、薬剤 ${medications.length}件）`,
       };
     }
     if (pendingDeletion.kind === 'vital') {
       return {
-        title: 'Delete Vital Signs',
+        title: 'Delete Vital Signs / バイタルを削除',
         message: 'このバイタル記録を削除します。元に戻せません。',
         detail: `測定日時：${formatDateTime(pendingDeletion.vital.measuredAt)}`,
       };
     }
     return {
-      title: 'Delete Nursing Note',
+      title: 'Delete Nursing Note / 看護記録を削除',
       message: 'この看護記録を削除します。元に戻せません。',
       detail: `記録日時：${formatDateTime(pendingDeletion.note.recordedAt)}`,
     };
@@ -106,6 +119,7 @@ export function PatientDetail({
     <div className="page">
       <Header
         title="Patient Detail"
+        titleJapanese="患者詳細"
         description="患者ごとのカルテ画面です。表示・記録のみを行い、診断や治療の提案は行いません。"
         actions={
           <>
@@ -114,7 +128,11 @@ export function PatientDetail({
               className="button button--ghost"
               onClick={() => onNavigate({ name: 'patients' })}
             >
-              Back to Patients
+              <BilingualText
+                english="Back to Patients"
+                japanese="患者一覧へ戻る"
+                mode="compact"
+              />
             </button>
             {!isEditing ? (
               <button
@@ -122,7 +140,7 @@ export function PatientDetail({
                 className="button button--secondary"
                 onClick={() => setIsEditing(true)}
               >
-                Edit
+                <BilingualText english="Edit" japanese="編集" mode="compact" />
               </button>
             ) : null}
             <button
@@ -130,7 +148,7 @@ export function PatientDetail({
               className="button button--danger"
               onClick={() => setPendingDeletion({ kind: 'patient' })}
             >
-              Delete
+              <BilingualText english="Delete" japanese="削除" mode="compact" />
             </button>
           </>
         }
@@ -138,7 +156,9 @@ export function PatientDetail({
 
       {isEditing ? (
         <section className="section">
-          <h2 className="section__title">Edit Patient</h2>
+          <h2 className="section__title">
+            <BilingualText english="Edit Patient" japanese="患者情報編集" mode="inline" />
+          </h2>
           <p className="section__description">
             登録済みの患者情報を編集します。患者IDを変更する場合も重複チェックが行われます。
           </p>
@@ -146,6 +166,7 @@ export function PatientDetail({
             initialPatient={patient}
             isPatientIdTaken={isPatientIdTaken}
             submitLabel="Save Changes"
+            submitJapaneseLabel="変更を保存"
             onSubmit={(input) => {
               onUpdatePatient(input);
               setIsEditing(false);
@@ -155,32 +176,92 @@ export function PatientDetail({
         </section>
       ) : (
         <>
+          <section className="patient-summary" aria-label="患者概要">
+            <div className="patient-summary__identity">
+              <span className="patient-summary__id mono">{patient.patientId}</span>
+              <h2>{patient.name}</h2>
+              <p>
+                {formatAge(patient.dateOfBirth)} / {genderLabel(patient.gender)} / 病室{' '}
+                {patient.room || '未登録'}
+              </p>
+              <p className="patient-summary__diagnosis">
+                <span>Main Diagnosis / 主な疾患</span>
+                <strong>{patient.diagnoses[0] || '未登録'}</strong>
+              </p>
+            </div>
+            <AllergyAlert allergies={patient.allergies} compact />
+          </section>
+
           <section className="card">
             <div className="card__header">
-              <h2 className="card__title">Patient Overview</h2>
-              <span className="card__meta">最終更新：{formatDateTime(patient.updatedAt)}</span>
-            </div>
-            <div className="patient-headline">
-              <span className="patient-headline__id mono">{patient.patientId}</span>
-              <span className="patient-headline__name">{patient.name}</span>
+              <h2 className="card__title">
+                <BilingualText
+                  english="Patient Overview"
+                  japanese="患者基本情報"
+                  mode="inline"
+                />
+              </h2>
+              <span className="card__meta">
+                Last Updated / 最終更新：{formatDateTime(patient.updatedAt)}
+              </span>
             </div>
             <dl className="definition-grid">
-              <DefinitionItem term="Age" description={formatAge(patient.dateOfBirth)} />
               <DefinitionItem
-                term="Date of Birth"
+                english="Date of Birth"
+                japanese="生年月日"
                 description={formatDate(patient.dateOfBirth)}
               />
-              <DefinitionItem term="Gender" description={genderLabel(patient.gender)} />
-              <DefinitionItem term="Room" description={patient.room} />
-              <DefinitionItem term="Blood Type" description={bloodTypeLabel(patient.bloodType)} />
-              <DefinitionItem term="Registered" description={formatDateTime(patient.createdAt)} />
+              <DefinitionItem
+                english="Blood Type"
+                japanese="血液型"
+                description={bloodTypeLabel(patient.bloodType)}
+              />
+              <DefinitionItem
+                english="Registered"
+                japanese="登録日時"
+                description={formatDateTime(patient.createdAt)}
+              />
+              <DefinitionItem
+                english="Last Updated"
+                japanese="最終更新"
+                description={formatDateTime(patient.updatedAt)}
+              />
             </dl>
           </section>
 
           <section className="card">
-            <h2 className="card__title">Diagnoses</h2>
+            <h2 className="card__title">
+              <BilingualText english="Medical Information" japanese="医療情報" mode="inline" />
+            </h2>
+            <AllergyAlert allergies={patient.allergies} />
+            <dl className="definition-grid definition-grid--wide medical-definition-grid">
+              <DefinitionItem
+                english="Allergies"
+                japanese="アレルギー"
+                description={patient.allergies || '未登録'}
+              />
+              <DefinitionItem
+                english="Medical History"
+                japanese="既往歴"
+                description={patient.medicalHistory}
+              />
+              <DefinitionItem
+                english="Chief Complaint"
+                japanese="主訴"
+                description={patient.chiefComplaint}
+              />
+              <DefinitionItem english="Notes" japanese="備考" description={patient.notes} />
+            </dl>
+          </section>
+
+          <section className="card">
+            <h2 className="card__title">
+              <BilingualText english="Diagnoses" japanese="疾患" mode="inline" />
+            </h2>
             {patient.diagnoses.length === 0 ? (
-              <p className="muted-text">疾患名は登録されていません。Edit から追加できます。</p>
+              <p className="muted-text">
+                疾患名は登録されていません。Edit / 編集から追加できます。
+              </p>
             ) : (
               <ul className="tag-list">
                 {patient.diagnoses.map((diagnosis) => (
@@ -192,9 +273,18 @@ export function PatientDetail({
             )}
           </section>
 
+          <MedicationSection
+            medications={medications}
+            onAdd={onAddMedication}
+            onUpdate={onUpdateMedication}
+            onDelete={onDeleteMedication}
+          />
+
           <section className="card">
             <div className="card__header">
-              <h2 className="card__title">Vital Signs</h2>
+              <h2 className="card__title">
+                <BilingualText english="Vital Signs" japanese="バイタルサイン" mode="inline" />
+              </h2>
               <span className="card__meta">{vitalSigns.length} 件</span>
             </div>
             <p className="card__description">
@@ -210,7 +300,9 @@ export function PatientDetail({
 
           <section className="card">
             <div className="card__header">
-              <h2 className="card__title">Nursing Notes</h2>
+              <h2 className="card__title">
+                <BilingualText english="Nursing Notes" japanese="看護記録" mode="inline" />
+              </h2>
               <span className="card__meta">{nursingNotes.length} 件</span>
             </div>
             <p className="card__description">
@@ -223,16 +315,6 @@ export function PatientDetail({
               onRequestDelete={(note) => setPendingDeletion({ kind: 'note', note })}
             />
           </section>
-
-          <section className="card">
-            <h2 className="card__title">Medical Information</h2>
-            <dl className="definition-grid definition-grid--wide">
-              <DefinitionItem term="Allergies" description={patient.allergies} />
-              <DefinitionItem term="Medical History" description={patient.medicalHistory} />
-              <DefinitionItem term="Chief Complaint" description={patient.chiefComplaint} />
-              <DefinitionItem term="Notes" description={patient.notes} />
-            </dl>
-          </section>
         </>
       )}
 
@@ -241,6 +323,8 @@ export function PatientDetail({
         title={dialogContent.title}
         message={dialogContent.message}
         detail={dialogContent.detail}
+        confirmLabel="Delete / 削除"
+        cancelLabel="Cancel / キャンセル"
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDeletion(null)}
       />
