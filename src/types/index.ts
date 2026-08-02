@@ -30,6 +30,8 @@ export interface Patient {
   patientId: string;
   /** 氏名 */
   name: string;
+  /** プロフィール画像（Data URL またはアプリ内画像パス） */
+  avatarUrl: string;
   /** 生年月日 (YYYY-MM-DD)。未入力の場合は空文字 */
   dateOfBirth: string;
   /** 性別 */
@@ -118,6 +120,10 @@ export interface Medication {
   indication: string;
   /** 臨時薬の前回使用日時 (ISO 8601)。未入力の場合は空文字 */
   lastAdministeredAt: string;
+  /** 服用開始日 (YYYY-MM-DD) */
+  startDate: string;
+  /** 服用終了日 (YYYY-MM-DD)。継続中の場合は空文字 */
+  endDate: string;
   memo: string;
   createdAt: string;
   updatedAt: string;

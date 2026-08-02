@@ -2,178 +2,74 @@ import { useMemo } from 'react';
 import type { AppData, Patient, Route } from '../types';
 import { Header } from '../components/Header';
 import { EmptyState } from '../components/EmptyState';
-import { formatAge, formatDateTime, isSameLocalDay } from '../utils/date';
+import { calculateAge, formatAge, formatDateTime } from '../utils/date';
 import { BilingualText } from '../components/BilingualText';
+import { PatientAvatar } from '../components/PatientAvatar';
 
 interface DashboardProps {
   data: AppData;
-  /** 更新日時の新しい順に並んだ患者一覧 */
   patients: Patient[];
   onNavigate: (route: Route) => void;
+  onGenerateDemoData: () => void;
 }
 
-interface StatCardProps {
-  label: string;
-  japanese: string;
-  value: string;
-  description: string;
-  /** 日時のような長い値を小さめに表示する */
-  compact?: boolean;
+function StatCard({ icon, label, value, description }: { icon: string; label: string; value: string; description: string }) {
+  return <div className="stat-card fade-in"><span className="stat-card__icon" aria-hidden="true">{icon}</span><div><p className="stat-card__label">{label}</p><p className="stat-card__value">{value}</p><p className="stat-card__description">{description}</p></div></div>;
 }
 
-function StatCard({ label, japanese, value, description, compact = false }: StatCardProps) {
+function PatientMiniList({ title, subtitle, patients, onNavigate, meta }: { title: string; subtitle: string; patients: Patient[]; onNavigate: (route: Route) => void; meta: (patient: Patient) => string }) {
   return (
-    <div className="stat-card">
-      <p className="stat-card__label">
-        <BilingualText english={label} japanese={japanese} mode="stacked" />
-      </p>
-      <p className={`stat-card__value${compact ? ' stat-card__value--compact' : ''}`}>{value}</p>
-      <p className="stat-card__description">{description}</p>
-    </div>
+    <section className="card dashboard-panel fade-in">
+      <div className="card__header"><h2 className="card__title">{title}</h2><span className="card__meta">{subtitle}</span></div>
+      {patients.length === 0 ? <p className="muted-text">表示できる患者はいません。</p> : (
+        <ul className="dashboard-patient-list">
+          {patients.map((patient) => <li key={patient.id}><button type="button" onClick={() => onNavigate({ name: 'patient-detail', patientId: patient.id })}><PatientAvatar name={patient.name} gender={patient.gender} size="small" /><span><strong>{patient.name}</strong><small>{patient.patientId} · {formatAge(patient.dateOfBirth)}</small></span><time>{meta(patient)}</time></button></li>)}
+        </ul>
+      )}
+    </section>
   );
 }
 
-/** Dashboard 画面 */
-export function Dashboard({ data, patients, onNavigate }: DashboardProps) {
+export function Dashboard({ data, patients, onNavigate, onGenerateDemoData }: DashboardProps) {
   const stats = useMemo(() => {
-    const today = new Date();
-
-    // 本日の記録件数（バイタル + 看護記録）
-    const todayRecords =
-      data.vitalSigns.filter((vital) => isSameLocalDay(vital.measuredAt, today)).length +
-      data.nursingNotes.filter((note) => isSameLocalDay(note.recordedAt, today)).length;
-
-    // 登録されている疾患の種類数
-    const diagnosisSet = new Set<string>();
-    for (const patient of data.patients) {
-      for (const diagnosis of patient.diagnoses) {
-        diagnosisSet.add(diagnosis);
-      }
-    }
-
-    // 最新の記録日時
-    const timestamps: number[] = [
-      ...data.vitalSigns.map((vital) => new Date(vital.measuredAt).getTime()),
-      ...data.nursingNotes.map((note) => new Date(note.recordedAt).getTime()),
-    ].filter((time) => Number.isFinite(time));
-
-    const latest = timestamps.length > 0 ? Math.max(...timestamps) : null;
-
+    const ages = data.patients.map((patient) => calculateAge(patient.dateOfBirth)).filter((age): age is number => age !== null);
+    const latestVitalByPatient = new Map<string, number>();
+    data.vitalSigns.forEach((vital) => {
+      const time = new Date(vital.measuredAt).getTime();
+      latestVitalByPatient.set(vital.patientId, Math.max(latestVitalByPatient.get(vital.patientId) ?? 0, time));
+    });
+    const latestVitalPatients = [...data.patients].filter((patient) => latestVitalByPatient.has(patient.id)).sort((a, b) => (latestVitalByPatient.get(b.id) ?? 0) - (latestVitalByPatient.get(a.id) ?? 0)).slice(0, 4);
     return {
-      patientCount: data.patients.length,
-      todayRecords,
-      diagnosisCount: diagnosisSet.size,
-      latestRecordAt: latest === null ? null : new Date(latest).toISOString(),
+      male: data.patients.filter((patient) => patient.gender === 'male').length,
+      female: data.patients.filter((patient) => patient.gender === 'female').length,
+      averageAge: ages.length ? Math.round(ages.reduce((sum, age) => sum + age, 0) / ages.length) : null,
+      diagnosisCount: data.patients.reduce((count, patient) => count + patient.diagnoses.length, 0),
+      latestVitalByPatient,
+      latestVitalPatients,
     };
   }, [data]);
 
-  const recentPatients = patients.slice(0, 5);
+  const recentlyRegistered = [...data.patients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+  const recentlyUpdated = patients.slice(0, 4);
 
   return (
     <div className="page">
-      <Header
-        title="Dashboard"
-        titleJapanese="ダッシュボード"
-        description="登録状況の概要です。すべて架空データのデモ表示であり、医療的な判断は行いません。"
-        actions={
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={() => onNavigate({ name: 'new-patient' })}
-          >
-            <BilingualText english="New Patient" japanese="患者登録" mode="compact" />
-          </button>
-        }
-      />
+      <Header title="Dashboard" titleJapanese="ダッシュボード" description="患者・記録の動きをひと目で把握できる、デモ用クリニカルダッシュボードです。" actions={<><button type="button" className="button button--secondary" onClick={onGenerateDemoData}><span aria-hidden="true">✦</span><BilingualText english="Generate Demo Data" japanese="デモデータ生成" mode="compact" /></button><button type="button" className="button button--primary" onClick={() => onNavigate({ name: 'new-patient' })}><BilingualText english="New Patient" japanese="患者登録" mode="compact" /></button></>} />
 
-      <section className="stat-grid" aria-label="Summary">
-        <StatCard
-          label="Patients"
-          japanese="登録患者数"
-          value={`${stats.patientCount}`}
-          description="登録されている患者数"
-        />
-        <StatCard
-          label="Today's Records"
-          japanese="本日の記録"
-          value={`${stats.todayRecords}`}
-          description="本日のバイタル・看護記録の合計件数"
-        />
-        <StatCard
-          label="Diagnoses"
-          japanese="登録疾患"
-          value={`${stats.diagnosisCount}`}
-          description="登録されている疾患名の種類数"
-        />
-        <StatCard
-          label="Last Record"
-          japanese="最終記録"
-          value={stats.latestRecordAt === null ? '—' : formatDateTime(stats.latestRecordAt)}
-          description="最新の記録日時"
-          compact
-        />
+      <section className="stat-grid" aria-label="患者統計">
+        <StatCard icon="♂" label="Male / 男性" value={`${stats.male}`} description="登録患者" />
+        <StatCard icon="♀" label="Female / 女性" value={`${stats.female}`} description="登録患者" />
+        <StatCard icon="◷" label="Average Age / 平均年齢" value={stats.averageAge === null ? '—' : `${stats.averageAge}歳`} description="生年月日登録済み患者" />
+        <StatCard icon="＋" label="Diagnoses / 疾患件数" value={`${stats.diagnosisCount}`} description="登録された疾患の合計" />
       </section>
 
-      <section className="card">
-        <div className="card__header">
-          <h2 className="card__title">
-            <BilingualText
-              english="Recently Updated Patients"
-              japanese="最近更新された患者"
-              mode="inline"
-            />
-          </h2>
-          <button
-            type="button"
-            className="button button--ghost button--small"
-            onClick={() => onNavigate({ name: 'patients' })}
-          >
-            <BilingualText english="View All" japanese="すべて表示" mode="compact" />
-          </button>
+      {patients.length === 0 ? <EmptyState title="No Patients Yet / 患者未登録" description="患者を登録するか、デモデータを生成してください。" /> : (
+        <div className="dashboard-grid">
+          <PatientMiniList title="Latest Vitals / 最新バイタル患者" subtitle="測定日時順" patients={stats.latestVitalPatients} onNavigate={onNavigate} meta={(patient) => formatDateTime(new Date(stats.latestVitalByPatient.get(patient.id) ?? 0).toISOString())} />
+          <PatientMiniList title="Recently Registered / 最近登録患者" subtitle="登録日時順" patients={recentlyRegistered} onNavigate={onNavigate} meta={(patient) => formatDateTime(patient.createdAt)} />
+          <PatientMiniList title="Recently Updated / 最近更新患者" subtitle="更新日時順" patients={recentlyUpdated} onNavigate={onNavigate} meta={(patient) => formatDateTime(patient.updatedAt)} />
         </div>
-
-        {recentPatients.length === 0 ? (
-          <EmptyState
-            title="No Patients Yet / 患者未登録"
-            description="患者がまだ登録されていません。New Patient から架空の患者を登録してください。"
-            action={
-              <button
-                type="button"
-                className="button button--primary"
-                onClick={() => onNavigate({ name: 'new-patient' })}
-              >
-                <BilingualText english="New Patient" japanese="患者登録" mode="compact" />
-              </button>
-            }
-          />
-        ) : (
-          <ul className="recent-list">
-            {recentPatients.map((patient) => (
-              <li key={patient.id}>
-                <button
-                  type="button"
-                  className="recent-item"
-                  onClick={() =>
-                    onNavigate({ name: 'patient-detail', patientId: patient.id })
-                  }
-                >
-                  <span className="recent-item__main">
-                    <span className="recent-item__id">{patient.patientId}</span>
-                    <span className="recent-item__name">{patient.name}</span>
-                    <span className="recent-item__sub">
-                      {formatAge(patient.dateOfBirth)}
-                      {patient.room ? ` / 病室 ${patient.room}` : ''}
-                    </span>
-                  </span>
-                  <span className="recent-item__time">
-                    更新：{formatDateTime(patient.updatedAt)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      )}
     </div>
   );
 }

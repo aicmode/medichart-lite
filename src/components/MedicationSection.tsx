@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Medication, MedicationCategory } from '../types';
 import type { MedicationInput } from '../hooks/useAppData';
-import { dateTimeLocalToISO, formatDateTime, toDateTimeLocalValue } from '../utils/date';
+import { dateTimeLocalToISO, formatDate, formatDateTime, toDateTimeLocalValue } from '../utils/date';
 import { isBlank } from '../utils/validation';
 import { BilingualText } from './BilingualText';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -54,6 +54,8 @@ interface FormState {
   prnChoice: string;
   customPrn: string;
   lastAdministeredAt: string;
+  startDate: string;
+  endDate: string;
   memo: string;
 }
 
@@ -84,6 +86,8 @@ function initialState(medication?: Medication): FormState {
     lastAdministeredAt: medication?.lastAdministeredAt
       ? toDateTimeLocalValue(new Date(medication.lastAdministeredAt))
       : '',
+    startDate: medication?.startDate ?? '',
+    endDate: medication?.endDate ?? '',
     memo: medication?.memo ?? '',
   };
 }
@@ -151,6 +155,8 @@ function MedicationForm({
         category === 'prn' && form.lastAdministeredAt
           ? (dateTimeLocalToISO(form.lastAdministeredAt) ?? '')
           : '',
+      startDate: form.startDate,
+      endDate: form.endDate,
       memo: form.memo.trim(),
     });
 
@@ -331,6 +337,21 @@ function MedicationForm({
         )}
       </div>
 
+      <div className="form-grid form-grid--compact">
+        <div className="field">
+          <label className="field__label" htmlFor={fieldId('startDate')}>
+            <BilingualText english="Start Date" japanese="開始日" mode="inline" />
+          </label>
+          <input id={fieldId('startDate')} className="input" type="date" value={form.startDate} onChange={(event) => update('startDate', event.target.value)} />
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor={fieldId('endDate')}>
+            <BilingualText english="End Date" japanese="終了日" mode="inline" />
+          </label>
+          <input id={fieldId('endDate')} className="input" type="date" min={form.startDate || undefined} value={form.endDate} onChange={(event) => update('endDate', event.target.value)} />
+        </div>
+      </div>
+
       <div className="field">
         <label className="field__label" htmlFor={fieldId('memo')}>
           <BilingualText english="Memo" japanese="メモ" mode="inline" />
@@ -430,6 +451,10 @@ function MedicationList({ category, medications, onEdit, onDelete, onAdd }: Medi
                     <dd>{medication.indication || '—'}</dd>
                   </div>
                 ) : null}
+                <div>
+                  <dt>Period / 服用期間</dt>
+                  <dd>{medication.startDate ? `${formatDate(medication.startDate)} 〜 ${medication.endDate ? formatDate(medication.endDate) : '継続中'}` : '—'}</dd>
+                </div>
                 {medication.memo ? (
                   <div>
                     <dt>Memo / メモ</dt>

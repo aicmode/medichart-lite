@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AppData, Medication, NursingNote, Patient, VitalSign } from '../types';
 import { createEmptyAppData, loadAppData, saveAppData } from '../utils/storage';
-import { createSampleData } from '../data/sampleData';
+import { createDemoData, createSampleData } from '../data/sampleData';
 import { generateId } from '../utils/id';
 import { normalizeText } from '../utils/validation';
 
@@ -38,7 +38,7 @@ function initializeAppData(): AppData {
       patients: [...stored.patients, ...sample.patients],
       vitalSigns: [...stored.vitalSigns, ...sample.vitalSigns],
       nursingNotes: [...stored.nursingNotes, ...sample.nursingNotes],
-      medications: stored.medications,
+      medications: [...stored.medications, ...sample.medications],
       sampleDataLoaded: true,
     };
   }
@@ -71,6 +71,7 @@ export interface UseAppDataResult {
   addMedication: (patientId: string, input: MedicationInput) => void;
   updateMedication: (id: string, input: MedicationInput) => void;
   deleteMedication: (id: string) => void;
+  generateDemoData: () => void;
 }
 
 export function useAppData(): UseAppDataResult {
@@ -262,6 +263,22 @@ export function useAppData(): UseAppDataResult {
     [touchPatient],
   );
 
+  const generateDemoData = useCallback(() => {
+    const demo = createDemoData(10, 'DEMO');
+    setData((current) => {
+      const previousDemoIds = new Set(
+        current.patients.filter((patient) => patient.patientId.startsWith('DEMO-')).map((patient) => patient.id),
+      );
+      return {
+        ...current,
+        patients: [...current.patients.filter((patient) => !previousDemoIds.has(patient.id)), ...demo.patients],
+        vitalSigns: [...current.vitalSigns.filter((vital) => !previousDemoIds.has(vital.patientId)), ...demo.vitalSigns],
+        nursingNotes: [...current.nursingNotes.filter((note) => !previousDemoIds.has(note.patientId)), ...demo.nursingNotes],
+        medications: [...current.medications.filter((medication) => !previousDemoIds.has(medication.patientId)), ...demo.medications],
+      };
+    });
+  }, []);
+
   return {
     data,
     patients,
@@ -280,5 +297,6 @@ export function useAppData(): UseAppDataResult {
     addMedication,
     updateMedication,
     deleteMedication,
+    generateDemoData,
   };
 }

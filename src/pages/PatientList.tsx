@@ -6,6 +6,7 @@ import { genderLabel } from '../data/options';
 import { formatAge, formatDateTime } from '../utils/date';
 import { normalizeForSearch } from '../utils/validation';
 import { BilingualText } from '../components/BilingualText';
+import { PatientAvatar } from '../components/PatientAvatar';
 
 interface PatientListProps {
   patients: Patient[];
@@ -125,7 +126,14 @@ export function PatientList({ patients, onNavigate }: PatientListProps) {
                       <span className="mono">{patient.patientId}</span>
                     </td>
                     <td data-label="Name / 氏名">
-                      <span className="strong-text">{patient.name}</span>
+                      <span className="patient-cell">
+                        <PatientAvatar
+                          name={patient.name}
+                          gender={patient.gender}
+                          size="inline"
+                        />
+                        <span className="strong-text">{patient.name}</span>
+                      </span>
                     </td>
                     <td data-label="Age / 年齢">{formatAge(patient.dateOfBirth)}</td>
                     <td data-label="Gender / 性別">{genderLabel(patient.gender)}</td>

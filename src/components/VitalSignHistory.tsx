@@ -3,7 +3,6 @@ import { EmptyState } from './EmptyState';
 import { formatDateTime } from '../utils/date';
 import { VITAL_RANGES } from '../utils/validation';
 import { BilingualText } from './BilingualText';
-import { VitalTrend } from './VitalTrend';
 
 interface VitalSignHistoryProps {
   vitalSigns: VitalSign[];
@@ -75,8 +74,6 @@ export function VitalSignHistory({ vitalSigns, onRequestDelete }: VitalSignHisto
   return (
     <div className="vital-history">
       <LatestVitalCard vital={latest} />
-
-      <VitalTrend vitalSigns={vitalSigns} />
 
       <div className="table-scroll">
         <table className="data-table">

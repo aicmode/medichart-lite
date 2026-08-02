@@ -11,6 +11,8 @@ interface LayoutProps {
   patients: Patient[];
   toast: ToastMessage | null;
   onDismissToast: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
   children: ReactNode;
 }
 
@@ -22,6 +24,8 @@ export function Layout({
   patients,
   toast,
   onDismissToast,
+  theme,
+  onToggleTheme,
   children,
 }: LayoutProps) {
   return (
@@ -35,6 +39,19 @@ export function Layout({
 
       <div className="app-main">
         <DisclaimerBanner />
+        <div className="app-toolbar no-print">
+          {/* 押した後に切り替わる先（現在の状態の反対）を表示する */}
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={onToggleTheme}
+            aria-label={theme === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}
+            title={theme === 'light' ? '現在：ライトモード / クリックでダークモード' : '現在：ダークモード / クリックでライトモード'}
+          >
+            <span aria-hidden="true">{theme === 'light' ? '🌙' : '☀️'}</span>
+            <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
+          </button>
+        </div>
         <Toast toast={toast} onDismiss={onDismissToast} />
         <main className="app-content">{children}</main>
         <footer className="app-footer">

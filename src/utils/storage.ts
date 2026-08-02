@@ -11,7 +11,7 @@ import { generateId } from './id';
 
 export const STORAGE_KEY = 'medichart-lite:app-data:v1';
 
-const DATA_VERSION = 2;
+const DATA_VERSION = 3;
 
 /** 空のデータセット */
 export function createEmptyAppData(): AppData {
@@ -61,6 +61,7 @@ function sanitizePatient(raw: unknown): Patient | null {
     id: readString(raw, 'id') || generateId(),
     patientId,
     name,
+    avatarUrl: readString(raw, 'avatarUrl'),
     dateOfBirth: readString(raw, 'dateOfBirth'),
     gender: isGender(gender) ? gender : 'undisclosed',
     room: readString(raw, 'room'),
@@ -140,6 +141,8 @@ function sanitizeMedication(raw: unknown): Medication | null {
     timing: readString(raw, 'timing').trim(),
     indication: readString(raw, 'indication').trim(),
     lastAdministeredAt: readString(raw, 'lastAdministeredAt'),
+    startDate: readString(raw, 'startDate'),
+    endDate: readString(raw, 'endDate'),
     memo: readString(raw, 'memo').trim(),
     createdAt: readString(raw, 'createdAt', now),
     updatedAt: readString(raw, 'updatedAt', now),

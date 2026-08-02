@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { Medication, NursingNote, Patient, Route, VitalSign } from '../types';
 import type {
   MedicationInput,
@@ -18,6 +18,11 @@ import { BilingualText } from '../components/BilingualText';
 import { MedicationSection } from '../components/MedicationSection';
 import { bloodTypeLabel, genderLabel } from '../data/options';
 import { formatAge, formatDate, formatDateTime } from '../utils/date';
+import { PatientAvatar } from '../components/PatientAvatar';
+
+const VitalTrend = lazy(() =>
+  import('../components/VitalTrend').then((module) => ({ default: module.VitalTrend })),
+);
 
 interface PatientDetailProps {
   patient: Patient;
@@ -125,6 +130,14 @@ export function PatientDetail({
           <>
             <button
               type="button"
+              className="button button--primary print-trigger"
+              onClick={() => window.print()}
+            >
+              <span aria-hidden="true">⎙</span>
+              <BilingualText english="Print PDF" japanese="PDF印刷" mode="compact" />
+            </button>
+            <button
+              type="button"
               className="button button--ghost"
               onClick={() => onNavigate({ name: 'patients' })}
             >
@@ -176,10 +189,12 @@ export function PatientDetail({
         </section>
       ) : (
         <>
+          <div className="printable-record">
           <section className="patient-summary" aria-label="患者概要">
+            <PatientAvatar name={patient.name} gender={patient.gender} />
             <div className="patient-summary__identity">
-              <span className="patient-summary__id mono">{patient.patientId}</span>
               <h2>{patient.name}</h2>
+              <span className="patient-summary__id mono">{patient.patientId}</span>
               <p>
                 {formatAge(patient.dateOfBirth)} / {genderLabel(patient.gender)} / 病室{' '}
                 {patient.room || '未登録'}
@@ -280,6 +295,10 @@ export function PatientDetail({
             onDelete={onDeleteMedication}
           />
 
+          <Suspense fallback={<section className="card"><p className="muted-text">グラフを読み込んでいます…</p></section>}>
+            <VitalTrend vitalSigns={vitalSigns} />
+          </Suspense>
+
           <section className="card">
             <div className="card__header">
               <h2 className="card__title">
@@ -301,7 +320,7 @@ export function PatientDetail({
           <section className="card">
             <div className="card__header">
               <h2 className="card__title">
-                <BilingualText english="Nursing Notes" japanese="看護記録" mode="inline" />
+                <BilingualText english="Nursing Timeline" japanese="看護記録タイムライン" mode="inline" />
               </h2>
               <span className="card__meta">{nursingNotes.length} 件</span>
             </div>
@@ -315,6 +334,7 @@ export function PatientDetail({
               onRequestDelete={(note) => setPendingDeletion({ kind: 'note', note })}
             />
           </section>
+          </div>
         </>
       )}
 

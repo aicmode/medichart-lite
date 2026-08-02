@@ -23,6 +23,8 @@ interface PatientFormProps {
 interface FormState {
   patientId: string;
   name: string;
+  /** 旧バージョンで保存された画像値。表示には使わず、そのまま保持するだけ */
+  avatarUrl: string;
   dateOfBirth: string;
   gender: Gender;
   room: string;
@@ -40,6 +42,7 @@ function toFormState(patient?: Patient): FormState {
   return {
     patientId: patient?.patientId ?? '',
     name: patient?.name ?? '',
+    avatarUrl: patient?.avatarUrl ?? '',
     dateOfBirth: patient?.dateOfBirth ?? '',
     gender: patient?.gender ?? 'undisclosed',
     room: patient?.room ?? '',
@@ -129,6 +132,7 @@ export function PatientForm({
     onSubmit({
       patientId: normalizeText(form.patientId),
       name: normalizeText(form.name),
+      avatarUrl: form.avatarUrl,
       dateOfBirth: form.dateOfBirth,
       gender: form.gender,
       room: normalizeText(form.room),

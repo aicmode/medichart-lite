@@ -21,9 +21,12 @@ export function NursingNoteList({ notes, onRequestDelete }: NursingNoteListProps
   }
 
   return (
-    <ul className="note-list">
+    <ul className="note-list nursing-timeline">
       {notes.map((note) => (
         <li className="note-item" key={note.id}>
+          <span className="note-item__marker" aria-hidden="true">
+            {note.recordType === 'care' ? '✚' : note.recordType === 'observation' ? '◉' : note.recordType === 'handover' ? '↗' : '●'}
+          </span>
           <div className="note-item__header">
             <div className="note-item__meta">
               <span className="badge">{recordTypeLabel(note.recordType)}</span>

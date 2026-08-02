@@ -17,6 +17,11 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'dashboard' });
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = window.localStorage.getItem('medichart-lite:theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   const {
     data,
@@ -36,7 +41,13 @@ export default function App() {
     addMedication,
     updateMedication,
     deleteMedication,
+    generateDemoData,
   } = useAppData();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem('medichart-lite:theme', theme);
+  }, [theme]);
 
   const showToast = useCallback((type: ToastMessage['type'], text: string) => {
     if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
@@ -59,7 +70,10 @@ export default function App() {
   const renderPage = () => {
     switch (route.name) {
       case 'dashboard':
-        return <Dashboard data={data} patients={patients} onNavigate={navigate} />;
+        return <Dashboard data={data} patients={patients} onNavigate={navigate} onGenerateDemoData={() => {
+          generateDemoData();
+          showToast('success', '患者10名分のデモデータを生成しました。');
+        }} />;
 
       case 'patients':
         return <PatientList patients={patients} onNavigate={navigate} />;
@@ -166,6 +180,8 @@ export default function App() {
       patients={patients}
       toast={toast}
       onDismissToast={() => setToast(null)}
+      theme={theme}
+      onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
     >
       {renderPage()}
     </Layout>
