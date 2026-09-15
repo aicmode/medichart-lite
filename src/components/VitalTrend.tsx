@@ -44,7 +44,7 @@ export function VitalTrend({ vitalSigns }: VitalTrendProps) {
           {METRICS.map((metric) => (
             <article className="trend-card" key={metric.key}>
               <h3>{metric.english} <span>/ {metric.japanese}</span></h3>
-              <div className="trend-card__rechart" aria-label={`${metric.japanese}の折れ線グラフ`}>
+              <div className="trend-card__rechart" role="img" aria-label={`${metric.japanese}の推移を示す折れ線グラフ（直近${chronological.length}件）`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chronological} margin={{ top: 12, right: 8, bottom: 2, left: -20 }}>
                     <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />

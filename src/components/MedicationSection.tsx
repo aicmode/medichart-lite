@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { Medication, MedicationCategory } from '../types';
+import type { Medication, MedicationCategory, MedicationStatus } from '../types';
 import type { MedicationInput } from '../hooks/useAppData';
 import { dateTimeLocalToISO, formatDate, formatDateTime, toDateTimeLocalValue } from '../utils/date';
-import { isBlank } from '../utils/validation';
+import { MAX_LENGTH, isBlank, validateDateRange } from '../utils/validation';
+import { MEDICATION_STATUS_OPTIONS, medicationStatusLabel } from '../data/options';
 import { BilingualText } from './BilingualText';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -56,10 +57,13 @@ interface FormState {
   lastAdministeredAt: string;
   startDate: string;
   endDate: string;
+  status: MedicationStatus;
   memo: string;
 }
 
-type FormErrors = Partial<Record<'name' | 'dose', string>>;
+type FormErrors = Partial<Record<'name' | 'dose' | 'endDate', string>>;
+
+const STATUS_ORDER: Record<MedicationStatus, number> = { active: 0, paused: 1, completed: 2 };
 
 function containsOption(options: readonly string[], value: string): boolean {
   return options.includes(value);
@@ -88,6 +92,7 @@ function initialState(medication?: Medication): FormState {
       : '',
     startDate: medication?.startDate ?? '',
     endDate: medication?.endDate ?? '',
+    status: medication?.status ?? 'active',
     memo: medication?.memo ?? '',
   };
 }
@@ -112,7 +117,7 @@ function MedicationForm({
     };
   }, []);
 
-  const update = (key: keyof FormState, value: string) => {
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
@@ -123,9 +128,13 @@ function MedicationForm({
     const nextErrors: FormErrors = {};
     if (isBlank(form.name)) nextErrors.name = '薬剤名は必須です。空白のみでは保存できません。';
     if (isBlank(form.dose)) nextErrors.dose = '用量は必須です。空白のみでは保存できません。';
+    const rangeError = validateDateRange(form.startDate, form.endDate);
+    if (rangeError) nextErrors.endDate = rangeError;
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      document.getElementById(fieldId(nextErrors.name ? 'name' : 'dose'))?.focus();
+      document
+        .getElementById(fieldId(nextErrors.name ? 'name' : nextErrors.dose ? 'dose' : 'endDate'))
+        ?.focus();
       return;
     }
 
@@ -157,6 +166,7 @@ function MedicationForm({
           : '',
       startDate: form.startDate,
       endDate: form.endDate,
+      status: form.status,
       memo: form.memo.trim(),
     });
 
@@ -190,6 +200,7 @@ function MedicationForm({
             id={fieldId('name')}
             className={`input${errors.name ? ' input--error' : ''}`}
             value={form.name}
+            maxLength={MAX_LENGTH.shortText}
             autoComplete="off"
             aria-invalid={errors.name !== undefined}
             aria-describedby={errors.name ? fieldId('name-error') : undefined}
@@ -348,7 +359,38 @@ function MedicationForm({
           <label className="field__label" htmlFor={fieldId('endDate')}>
             <BilingualText english="End Date" japanese="終了日" mode="inline" />
           </label>
-          <input id={fieldId('endDate')} className="input" type="date" min={form.startDate || undefined} value={form.endDate} onChange={(event) => update('endDate', event.target.value)} />
+          <input
+            id={fieldId('endDate')}
+            className={`input${errors.endDate ? ' input--error' : ''}`}
+            type="date"
+            min={form.startDate || undefined}
+            value={form.endDate}
+            aria-invalid={errors.endDate !== undefined}
+            aria-describedby={errors.endDate ? fieldId('endDate-error') : undefined}
+            onChange={(event) => update('endDate', event.target.value)}
+          />
+          {errors.endDate ? (
+            <p className="field__error" id={fieldId('endDate-error')} role="alert">
+              {errors.endDate}
+            </p>
+          ) : null}
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor={fieldId('status')}>
+            <BilingualText english="Status" japanese="状態" mode="inline" />
+          </label>
+          <select
+            id={fieldId('status')}
+            className="input"
+            value={form.status}
+            onChange={(event) => update('status', event.target.value as MedicationStatus)}
+          >
+            {MEDICATION_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -420,9 +462,12 @@ function MedicationList({ category, medications, onEdit, onDelete, onAdd }: Medi
       ) : (
         <ul className="medication-list">
           {medications.map((medication) => (
-            <li className="medication-item" key={medication.id}>
+            <li className={`medication-item medication-item--${medication.status}`} key={medication.id}>
               <div className="medication-item__main">
                 <strong>{medication.name}</strong>
+                <span className={`status-badge status-badge--${medication.status}`}>
+                  {medicationStatusLabel(medication.status)}
+                </span>
                 <span className="medication-item__dose">
                   {medication.dose} {medication.unit}
                 </span>
@@ -498,8 +543,9 @@ export function MedicationSection({
   } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Medication | null>(null);
 
-  const regular = medications.filter((medication) => medication.category === 'regular');
-  const prn = medications.filter((medication) => medication.category === 'prn');
+  const byStatus = (a: Medication, b: Medication) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+  const regular = medications.filter((medication) => medication.category === 'regular').sort(byStatus);
+  const prn = medications.filter((medication) => medication.category === 'prn').sort(byStatus);
 
   return (
     <>
@@ -511,7 +557,7 @@ export function MedicationSection({
           <span className="card__meta">{medications.length} 件</span>
         </div>
         <p className="medication-safety">
-          薬剤情報を登録・表示するためのデモ機能です。投与可否、用量、投与間隔などの医療判断は行いません。
+          薬剤情報を登録・表示するためのデモ機能です。処方判断・相互作用の判定・投与可否・用量・投与間隔などの医療判断は行いません。
         </p>
 
         {editor ? (

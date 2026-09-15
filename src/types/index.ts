@@ -2,6 +2,11 @@
  * MediChart Lite - アプリ全体で共有するデータ型定義
  *
  * 注意: 本アプリは学習・デモ用途です。実在患者の情報は扱いません。
+ *
+ * 共通規約:
+ * - `id` はアプリ内部で生成する一意ID（UUID）。子データは `patientId` で Patient.id を参照する。
+ * - 日時は ISO 8601 文字列、日付のみの値は YYYY-MM-DD 文字列で保持する。
+ * - `createdAt` / `updatedAt` はすべての記録データで保持する。
  */
 
 /** 性別 */
@@ -10,7 +15,10 @@ export type Gender = 'male' | 'female' | 'other' | 'undisclosed';
 /** 血液型 */
 export type BloodType = 'A' | 'B' | 'O' | 'AB' | 'unknown';
 
-/** 看護記録の記録種別 */
+/**
+ * 経過・看護記録の記録種別。
+ * 'soap' / 'handover' は v1〜v3 で保存された記録の互換用。v2 では専用タブで管理する。
+ */
 export type RecordType =
   | 'soap'
   | 'progress'
@@ -22,6 +30,15 @@ export type RecordType =
 /** 薬剤区分 */
 export type MedicationCategory = 'regular' | 'prn';
 
+/** 内服の状態（登録内容の整理用。投与判断ではない） */
+export type MedicationStatus = 'active' | 'paused' | 'completed';
+
+/** 申し送りの優先度（業務上の整理ラベル。医学的な緊急度判定ではない） */
+export type HandoverPriority = 'high' | 'normal' | 'low';
+
+/** 申し送りの確認状態 */
+export type HandoverStatus = 'open' | 'acknowledged';
+
 /** 患者情報 */
 export interface Patient {
   /** 内部的に使用する一意なID（他データとの紐付けキー） */
@@ -30,15 +47,13 @@ export interface Patient {
   patientId: string;
   /** 氏名 */
   name: string;
-  /** プロフィール画像（Data URL またはアプリ内画像パス） */
+  /** 旧バージョンの画像値。表示には使わず互換のため保持する */
   avatarUrl: string;
   /** 生年月日 (YYYY-MM-DD)。未入力の場合は空文字 */
   dateOfBirth: string;
-  /** 性別 */
   gender: Gender;
   /** 病室 */
   room: string;
-  /** 血液型 */
   bloodType: BloodType;
   /** アレルギー */
   allergies: string;
@@ -46,66 +61,82 @@ export interface Patient {
   medicalHistory: string;
   /** 主訴 */
   chiefComplaint: string;
-  /** 疾患名（タグ） */
+  /** 疾患名（タグ）。先頭を主要疾患として扱う */
   diagnoses: string[];
   /** 備考 */
   notes: string;
   /** 登録日時 (ISO 8601) */
   createdAt: string;
-  /** 最終更新日時 (ISO 8601) */
+  /** 最終更新日時 (ISO 8601)。子データの追加・更新でも進む */
   updatedAt: string;
+  /** 基本情報・医療情報を最後に編集した日時。未編集なら空文字（タイムライン用） */
+  profileUpdatedAt: string;
 }
 
 /** バイタルサイン記録 */
 export interface VitalSign {
   id: string;
-  /** Patient.id への参照 */
   patientId: string;
   /** 測定日時 (ISO 8601) */
   measuredAt: string;
-  /** 体温 (℃) */
+  /** 体温 BT (℃) */
   temperature: number | null;
-  /** 収縮期血圧 (mmHg) */
+  /** 収縮期血圧 SBP (mmHg) */
   systolic: number | null;
-  /** 拡張期血圧 (mmHg) */
+  /** 拡張期血圧 DBP (mmHg) */
   diastolic: number | null;
-  /** 脈拍 (回/分) */
+  /** 脈拍 HR (回/分) */
   pulse: number | null;
-  /** 呼吸数 (回/分) */
+  /** 呼吸数 RR (回/分) */
   respiration: number | null;
   /** SpO2 (%) */
   spo2: number | null;
-  /** 意識レベル（記録した文言をそのまま保持する） */
+  /** 意識状態（記録した文言をそのまま保持する） */
   consciousness: string;
   /** 疼痛スケール (0-10) */
   painScale: number | null;
-  /** メモ */
+  /** 備考 */
   memo: string;
-  /** 登録日時 (ISO 8601) */
   createdAt: string;
+  updatedAt: string;
 }
 
-/** 看護記録 */
+/** 経過・看護記録 */
 export interface NursingNote {
   id: string;
-  /** Patient.id への参照 */
   patientId: string;
   /** 記録日時 (ISO 8601) */
   recordedAt: string;
-  /** 記録者名 */
+  /** 記録者名（架空） */
   author: string;
-  /** 記録種別 */
   recordType: RecordType;
   /** 記録本文 */
   body: string;
-  /** 登録日時 (ISO 8601) */
+  /** タグ */
+  tags: string[];
   createdAt: string;
+  updatedAt: string;
+}
+
+/** SOAP 形式の記録（架空患者のデモ記録。AIによる診断・治療判断ではない） */
+export interface SoapRecord {
+  id: string;
+  patientId: string;
+  recordedAt: string;
+  author: string;
+  /** 看護上の問題・テーマ（例: #1 転倒リスク） */
+  problem: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** 患者ごとの薬剤情報（登録・表示・履歴管理のみ） */
 export interface Medication {
   id: string;
-  /** Patient.id への参照 */
   patientId: string;
   category: MedicationCategory;
   /** 薬剤名 */
@@ -114,17 +145,37 @@ export interface Medication {
   dose: string;
   /** 単位 */
   unit: string;
-  /** 定期薬の服用タイミング */
+  /** 用法・服用タイミング（定期薬） */
   timing: string;
   /** 使用目的または臨時薬の使用条件 */
   indication: string;
   /** 臨時薬の前回使用日時 (ISO 8601)。未入力の場合は空文字 */
   lastAdministeredAt: string;
-  /** 服用開始日 (YYYY-MM-DD) */
+  /** 開始日 (YYYY-MM-DD) */
   startDate: string;
-  /** 服用終了日 (YYYY-MM-DD)。継続中の場合は空文字 */
+  /** 終了日 (YYYY-MM-DD)。継続中の場合は空文字 */
   endDate: string;
+  status: MedicationStatus;
   memo: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 申し送り記録（看護業務の情報整理。診療判断ではない） */
+export interface HandoverRecord {
+  id: string;
+  patientId: string;
+  /** 申し送り日時 */
+  recordedAt: string;
+  author: string;
+  priority: HandoverPriority;
+  /** 申し送り内容 */
+  content: string;
+  /** 注意事項 */
+  cautions: string;
+  status: HandoverStatus;
+  /** 確認日時。未確認なら空文字 */
+  acknowledgedAt: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -136,17 +187,32 @@ export interface AppData {
   patients: Patient[];
   vitalSigns: VitalSign[];
   nursingNotes: NursingNote[];
+  soapRecords: SoapRecord[];
   medications: Medication[];
+  handovers: HandoverRecord[];
   /** サンプルデータ投入済みフラグ（重複投入の防止） */
   sampleDataLoaded: boolean;
 }
 
-/** 画面遷移の状態（ルーティングライブラリを使わず state で管理する） */
+/** Patient Detail のタブ */
+export type PatientTab =
+  | 'overview'
+  | 'vitals'
+  | 'records'
+  | 'soap'
+  | 'medications'
+  | 'medical'
+  | 'handover'
+  | 'timeline';
+
+/** 画面遷移の状態（URL ハッシュと相互変換する） */
 export type Route =
   | { name: 'dashboard' }
   | { name: 'patients' }
   | { name: 'new-patient' }
-  | { name: 'patient-detail'; patientId: string };
+  | { name: 'patient-detail'; patientId: string; tab: PatientTab }
+  | { name: 'data' }
+  | { name: 'not-found'; path: string };
 
 /** 画面上部に表示するフィードバックメッセージ */
 export interface ToastMessage {

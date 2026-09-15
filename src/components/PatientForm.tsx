@@ -5,7 +5,7 @@ import type { PatientInput } from '../hooks/useAppData';
 import { BLOOD_TYPE_OPTIONS, GENDER_OPTIONS } from '../data/options';
 import { DiagnosisSelector } from './DiagnosisSelector';
 import { calculateAge, todayDateValue } from '../utils/date';
-import { isBlank, isFutureDate, normalizeText } from '../utils/validation';
+import { MAX_LENGTH, isBlank, normalizeText, validateDateOfBirth, validatePatientId } from '../utils/validation';
 import { BilingualText } from './BilingualText';
 
 interface PatientFormProps {
@@ -96,19 +96,20 @@ export function PatientForm({
   const validate = (): FieldErrors => {
     const nextErrors: FieldErrors = {};
 
-    if (isBlank(form.patientId)) {
-      nextErrors.patientId = '患者IDは必須です。空白のみでは登録できません。';
-    } else if (isPatientIdTaken(normalizeText(form.patientId))) {
-      nextErrors.patientId = `患者ID「${normalizeText(form.patientId)}」は既に登録されています。別のIDを入力してください。`;
-    }
+    const patientIdError = validatePatientId(form.patientId, {
+      isTaken: isPatientIdTaken,
+      originalPatientId: initialPatient?.patientId,
+    });
+    if (patientIdError) nextErrors.patientId = patientIdError;
 
     if (isBlank(form.name)) {
       nextErrors.name = '氏名は必須です。空白のみでは登録できません。';
+    } else if (normalizeText(form.name).length > MAX_LENGTH.name) {
+      nextErrors.name = `氏名は${MAX_LENGTH.name}文字以内で入力してください。`;
     }
 
-    if (form.dateOfBirth && isFutureDate(form.dateOfBirth)) {
-      nextErrors.dateOfBirth = '生年月日に未来の日付は指定できません。';
-    }
+    const dateOfBirthError = validateDateOfBirth(form.dateOfBirth);
+    if (dateOfBirthError) nextErrors.dateOfBirth = dateOfBirthError;
 
     return nextErrors;
   };
@@ -171,12 +172,15 @@ export function PatientForm({
               type="text"
               value={form.patientId}
               placeholder="例：PT-0003"
+              maxLength={MAX_LENGTH.patientId + 10}
               autoComplete="off"
               aria-invalid={errors.patientId !== undefined}
               aria-describedby={errors.patientId ? `${ids.patientId}-error` : undefined}
               onChange={(event) => updateField('patientId', event.target.value)}
             />
-            <p className="field__hint">院内で使う任意の患者IDを入力します（重複不可）。</p>
+            <p className="field__hint">
+              半角英数字・ハイフン・アンダースコア、{MAX_LENGTH.patientId}文字以内（重複不可・「DEMO-」は予約済み）。
+            </p>
             {errors.patientId ? (
               <p className="field__error" id={`${ids.patientId}-error`} role="alert">
                 {errors.patientId}
@@ -195,6 +199,7 @@ export function PatientForm({
               type="text"
               value={form.name}
               placeholder="例：架空 太郎"
+              maxLength={MAX_LENGTH.name + 10}
               autoComplete="off"
               aria-invalid={errors.name !== undefined}
               aria-describedby={errors.name ? `${ids.name}-error` : undefined}
@@ -261,6 +266,7 @@ export function PatientForm({
               type="text"
               value={form.room}
               placeholder="例：301"
+              maxLength={MAX_LENGTH.room}
               autoComplete="off"
               onChange={(event) => updateField('room', event.target.value)}
             />

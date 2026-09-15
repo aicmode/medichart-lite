@@ -75,6 +75,36 @@ export function formatDate(value: string): string {
   return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
 }
 
+/** ISO 8601 文字列を短い日時表記にする (例: 08/01 09:30) */
+export function formatShortDateTime(iso: string): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (!isValidDate(date)) return '—';
+  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(
+    date.getMinutes(),
+  )}`;
+}
+
+/** 経過時間の簡易表記（例: 5分前 / 3時間前 / 2日前） */
+export function formatRelativeTime(iso: string, now: Date = new Date()): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (!isValidDate(date)) return '—';
+  const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+  if (diffMinutes < 1) return 'たった今';
+  if (diffMinutes < 60) return `${diffMinutes}分前`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}時間前`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}日前`;
+  return formatDateTime(iso);
+}
+
+/** ISO 日時の降順比較（新しい順） */
+export function compareIsoDesc(a: string, b: string): number {
+  return new Date(b).getTime() - new Date(a).getTime();
+}
+
 /** 2つのISO日時が同じ日かどうか */
 export function isSameLocalDay(iso: string, target: Date = new Date()): boolean {
   if (!iso) return false;
