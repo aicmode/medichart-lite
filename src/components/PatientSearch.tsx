@@ -53,7 +53,7 @@ export function PatientSearch({ patients, onNavigate }: PatientSearchProps) {
   const selectPatient = (patient: Patient) => {
     setQuery('');
     setOpen(false);
-    onNavigate({ name: 'patient-detail', patientId: patient.id });
+    onNavigate({ name: 'patient-detail', patientId: patient.id, tab: 'overview' });
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

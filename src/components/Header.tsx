@@ -15,7 +15,7 @@ export function Header({ title, titleJapanese, description, actions }: HeaderPro
   return (
     <header className="page-header">
       <div className="page-header__text">
-        <h1 className="page-header__title">
+        <h1 className="page-header__title" tabIndex={-1}>
           <span className="page-header__title-en">{title}</span>
           <span className="page-header__title-ja" lang="ja">
             {titleJapanese}

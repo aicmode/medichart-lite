@@ -1,25 +1,42 @@
 import { BilingualText } from './BilingualText';
+import { parseAllergyItems } from '../domain/allergy';
 
-interface AllergyAlertProps { allergies: string; compact?: boolean }
-
-function allergyItems(value: string): string[] {
-  const normalized = value.trim().replace(/（[^）]*）|\([^)]*\)/g, '');
-  if (!normalized || ['なし', '特記事項なし', '登録なし', '未登録'].includes(normalized)) return [];
-  return value.split(/[,、\n]/).map((item) => item.trim()).filter(Boolean);
+interface AllergyAlertProps {
+  allergies: string;
+  compact?: boolean;
 }
 
+/** アレルギーの重要表示（登録ありは赤系、なし・未登録は中立表示） */
 export function AllergyAlert({ allergies, compact = false }: AllergyAlertProps) {
-  const items = allergyItems(allergies);
+  const items = parseAllergyItems(allergies);
+  const hasItems = items.length > 0;
+  const isUnregistered = allergies.trim() === '';
+
   return (
-    <div className={`allergy-alert${items.length ? ' allergy-alert--warning' : ' allergy-alert--safe'}${compact ? ' allergy-alert--compact' : ''}`} role={items.length ? 'alert' : 'status'}>
-      <span className="allergy-alert__icon" aria-hidden="true">{items.length ? '!' : '✓'}</span>
+    <div
+      className={`allergy-alert${hasItems ? ' allergy-alert--warning' : ' allergy-alert--safe'}${compact ? ' allergy-alert--compact' : ''}`}
+    >
+      <span className="allergy-alert__icon" aria-hidden="true">{hasItems ? '!' : '✓'}</span>
       <span className="allergy-alert__content">
-        <strong className="allergy-alert__title"><BilingualText english="ALLERGIES" japanese="アレルギー" mode="inline" /></strong>
-        {items.length ? (
+        <strong className="allergy-alert__title">
+          <BilingualText english="ALLERGIES" japanese="アレルギー" mode="inline" />
+        </strong>
+        {hasItems ? (
           <span className="allergy-badges">
-            {items.map((item) => <span className={`allergy-badge${/latex/i.test(item) ? ' allergy-badge--caution' : ''}`} key={item}><span aria-hidden="true">●</span>{item}</span>)}
+            <span className="visually-hidden">登録あり:</span>
+            {items.map((item) => (
+              <span className="allergy-badge" key={item}>
+                <span aria-hidden="true">●</span>
+                {item}
+              </span>
+            ))}
           </span>
-        ) : <span className="allergy-badge allergy-badge--safe"><span aria-hidden="true">●</span>No Known Allergies</span>}
+        ) : (
+          <span className="allergy-badge allergy-badge--safe">
+            <span aria-hidden="true">●</span>
+            {isUnregistered ? 'Not Recorded / 未登録' : 'No Known Allergies / 登録なし'}
+          </span>
+        )}
       </span>
     </div>
   );
